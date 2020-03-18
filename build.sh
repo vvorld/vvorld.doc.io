@@ -1,0 +1,1 @@
+yaml2json ./enveloped-application.yaml -p -i4 -s
