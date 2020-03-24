@@ -6,7 +6,7 @@ servers:
     description: Sandbox server
 info: 
   title: Enveloped Application
-  version: '1.0'
+  version: '2.0'
   x-logo:
     url: './logo.svg'
     altText: GetID
@@ -23,7 +23,7 @@ paths:
   /plugins/v1/acceptor/application:
     post:
       security:
-        - bearerAuth: []
+        - ApiKeyAuth: []
       description: Allows to send data to verification
       requestBody:
         content:
@@ -40,7 +40,13 @@ paths:
               schema:
                 properties:
                   responseCode:
+                    value: 200
+                    example: 200
                     type: integer
+                  id:
+                    type: string
+                    format: ObjectId
+                    example: 5e62110968e3fb4d655756d1
         '401':
           description: error, missing or wrong authorization headers
           content:
@@ -48,6 +54,8 @@ paths:
               schema:
                 properties:
                   responseCode:
+                    value: 401
+                    example: 401
                     type: integer
                   errorMessage:
                     type: string
@@ -59,6 +67,8 @@ paths:
               schema:
                 properties:
                   responseCode:
+                    value: 402
+                    example: 402
                     type: integer
         '400':
           description: error, empty request body
@@ -67,6 +77,8 @@ paths:
               schema:
                 properties:
                   responseCode:
+                    value: 400
+                    example: 400
                     type: integer
   /plugins/v1/acceptor/application/{appId}:
     get:
@@ -85,11 +97,15 @@ paths:
           content:
             'application/json':
               schema:
-                properties:
-                  responseCode:
-                    type: integer
-                  body:
-                    $ref: '#/components/schemas/VerificationResult'
+                allOf:
+                  - type: object
+                    properties:
+                      responseCode:
+                        type: integer
+                      id:
+                        type: string
+                  - $ref: '#/components/schemas/VerificationResult'
+                  
         '401':
           description: error, missing or wrong authorization headers
           content:
@@ -110,6 +126,14 @@ paths:
                   responseCode:
                     type: integer
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        You can find token on settings page.
+        It's header is required foa all API methods
   schemas:
     EnvelopedApplication:
       type: object
@@ -121,23 +145,19 @@ components:
         application:
           $ref: '#/components/schemas/Application'
         verificationTypes:
-          type: array
-          items:
-            type: string
-            enum: ['watchlists', 'face-matching', 'extract-data', 'crosschecking']
+          $ref: '#/components/schemas/VerificationTypes'
     VerificationResult:
       allOf:
+        - $ref: '#/components/schemas/EnvelopedApplication'
         - type: object
           properties:
-            id:
-              type: string
             processStatus: 
               $ref: '#/components/schemas/ProcessStatus'
             overallResult:
               $ref: '#/components/schemas/OverallResult'
             servicesResults:
               $ref: '#/components/schemas/ServiceResults'
-        - $ref: '#/components/schemas/EnvelopedApplication'
+        
         
     Application: 
       type: object
@@ -155,42 +175,55 @@ components:
           nullable: true
           items: 
             $ref: '#/components/schemas/Field'
+          example: 
+            - contentType: string
+              content: Firs Name
+              category: Artem
+              requireCheck: true
+            - contentType: string
+              content: Last Name
+              category: Gerus
+              requireCheck: true
+            - contentType: sex
+              content: male
+              category: sex
         documents:
           type: array
           nullable: true
+          description: list of document for data extracting or crosschecking
           items:
             type: object
             properties:
               issuingCountry:
                 type: string
-                example: ee, uk
+                description: Country code of country of issue
+                format: 'ISO 3166'
+                example: UK
               documentType:
-                type: string
-                example: passport, id-card, driving-licence, residence-permit
-              images:
+                $ref:  '#/components/schemas/DocumentType'
+              files:
+                description: document photos or scans 
                 type: array
                 items: 
-                  $ref: '#/components/schemas/Media'
-              mrz:
-                type: string
-              nfc:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Field'
+                  $ref: '#/components/schemas/DocumentMedia'
+            required:
+              - images
+              # mrz:
+              #   type: string
+              # nfc:
+              #   type: array
+              #   items:
+              #     $ref: '#/components/schemas/Field'
           required: [images]
-        faces:
-          type: array
-          nullable: true
-          items:
-            type: object
-            properties:
-              category:
-                type: string
-                example: selfie, liveness, selfieVideo
-              content:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Media'
+        selfie:
+          properties:
+            files:
+              type: array
+              description: list of selfie for face-matching
+              items:
+                $ref: '#/components/schemas/FacesMedia'
+          require:
+            - files
     
     Field:
       type: object
@@ -219,9 +252,7 @@ components:
             Check of data is required.
             If this flag is true and we could not check this data from document,
             application status is going to decline 
-          example: 
-            - true
-            - false
+          example: true
     
     StringField:
       type: object
@@ -291,12 +322,9 @@ components:
               type: string
               enum: [country]
             content:
-              format: country
+              format: 'ISO 3166'
               type: string
-              example:
-                - EE
-                - US
-                - RU
+              example: US
               description: Country code
         - $ref: '#/components/schemas/FiledBase'
       required: [content, category, contentType]
@@ -314,30 +342,44 @@ components:
                 - true
                 - false
               type: string
-              example:
-                - true
-                - false
+              example: true
               description: The bool value
         - $ref: '#/components/schemas/FiledBase'
       required: [content, category, contentType]
 
   
-    Media:
+    FacesMedia:
       type: object
       properties:
         mediaType:
           type: string
-          example: image/jpeg, video/mp4
-        kind:
-          type: string
-          example: front, back, selfie, liveness, selfieVideo
+          description: media-type of content
+          example: image/png
         url:
           description: address from which we can download or blob
           type: string
-          minimum: 0
-        urlExpireDate:
+          example: "data:image/png;base64,R0lGODlhDAAMAK..."
+      required: [mediaType, kind, url]
+    
+    DocumentMedia:
+      type: object
+      properties:
+        mediaType:
           type: string
-          format: date-time
+          description: media-type of content
+          example: image/png
+        kind:
+          type: string
+          description: kind of document page
+          enum:
+            - front
+            - back
+            - page
+          example: front
+        url:
+          description: address from which we can download or blob
+          type: string
+          example: "data:image/png;base64,R0lGODlhDAAMAK..."
       required: [mediaType, kind, url]
 
     Extensions:
@@ -409,28 +451,21 @@ components:
           type: string
           description: Date and time of creating application
           format: date-time
-          example:
-            - "2020-03-17T20:28:37.061Z"
+          example: "2020-03-17T20:28:37.061Z"
         
         appName:
           type: string
           description: The name of application which is doing request
-          example:
-            - sdk
-            - my-api-client
+          example: my-api-client
         appVersion:
           type: string
           description: The version of application which is doing request
-          example:
-            - 1.0.0
-            - 2.3.4
+          example: 1.0.0
         locale:
           type: string
           description: The locale of application which is doing request
           format: locale
-          example:
-            - en_US
-            - fr_BE
+          example: en_US
       additionalProperties:
         x-additionalPropertiesName: x-
         description: You can add custom headers with prefix `x-`
@@ -633,3 +668,29 @@ components:
         - date
         - country
         - boolean
+    
+    VerificationTypes:
+      type: array
+      description: |
+        It's list of verification which you want to do:
+        * watchlists - It's check user on PEPs. You can fill fields (first name, last name)
+        * face-matching - We will try check photo on document and selfie. You can fill selfie list and document list
+        * extract-data - We will try extract data from documents. You can fill documents
+        * crosschecking - You send information about user and we will check a conformity between it and extracted data
+        If you don't send this field we do all verification what we can. You can fill documents and fields
+      items:
+        nullable: true
+        type: string
+        enum: ['watchlists', 'face-matching', 'extract-data', 'crosschecking']
+      example:
+         ['watchlists', 'face-matching', 'extract-data']
+
+    DocumentType:
+      type: string
+      description: kind of document
+      enum:
+        - passport
+        - id-card
+        - driving-licence
+        - residence-permit
+      example: id-card
