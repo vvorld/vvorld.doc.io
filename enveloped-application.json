@@ -118,7 +118,7 @@
                 }
             }
         },
-        "/plugins/v1/acceptor/application/{appId}": {
+        "/plugins/v1/acceptor/application/{id}": {
             "get": {
                 "security": [
                     {
@@ -129,7 +129,7 @@
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "appId",
+                        "name": "id",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -181,7 +181,7 @@
                         }
                     },
                     "402": {
-                        "description": "error, Bad data. Application with Id {appId} not found",
+                        "description": "error, Bad data. Application with Id {id} not found",
                         "content": {
                             "application/json": {
                                 "schema": {

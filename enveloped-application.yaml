@@ -80,14 +80,14 @@ paths:
                     value: 400
                     example: 400
                     type: integer
-  /plugins/v1/acceptor/application/{appId}:
+  /plugins/v1/acceptor/application/{id}:
     get:
       security:
         - bearerAuth: []
       description: Allows to get verifired application
       parameters:
         - in: path
-          name: appId
+          name: id
           required: true
           schema:
             type: string
@@ -118,7 +118,7 @@ paths:
                     type: string
                     example: 'Unauthorized'
         '402':
-          description: error, Bad data. Application with Id {appId} not found
+          description: error, Bad data. Application with Id {id} not found
           content:
             'application/json':
               schema:
