@@ -4,15 +4,15 @@ servers:
     description: Production server
   - url: https://spxon.sb.getid.dev/
     description: Sandbox server
-info: 
+info:
   title: Enveloped Application
-  version: '2.0'
+  version: "2.0"
   x-logo:
-    url: './logo.svg'
+    url: "./logo.svg"
     altText: GetID
-  
+
   description: |
-    
+
     # API 
     Information about API
 
@@ -27,16 +27,16 @@ paths:
       description: Allows to send data to verification
       requestBody:
         content:
-          'application/json':
+          "application/json":
             schema:
               properties:
                 envelopedApplication:
-                  $ref: '#/components/schemas/EnvelopedApplication'
+                  $ref: "#/components/schemas/EnvelopedApplication"
       responses:
-        '200':
+        "200":
           description: OK
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
@@ -47,10 +47,10 @@ paths:
                     type: string
                     format: ObjectId
                     example: 5e62110968e3fb4d655756d1
-        '401':
+        "401":
           description: error, missing or wrong authorization headers
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
@@ -59,21 +59,21 @@ paths:
                     type: integer
                   errorMessage:
                     type: string
-                    example: 'Unauthorized'
-        '402':
+                    example: "Unauthorized"
+        "402":
           description: error, wrong format or missing data
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
                     value: 402
                     example: 402
                     type: integer
-        '400':
+        "400":
           description: error, empty request body
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
@@ -83,7 +83,7 @@ paths:
   /plugins/v1/acceptor/application/{id}:
     get:
       security:
-        - bearerAuth: []
+        - ApiKeyAuth: []
       description: Allows to get verifired application
       parameters:
         - in: path
@@ -92,35 +92,41 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
-            'application/json':
+            "application/json":
               schema:
                 allOf:
                   - type: object
                     properties:
                       responseCode:
                         type: integer
+                        description: contains HTTP code (200)
+                        value: 200
+                        example: 200
                       id:
                         type: string
-                  - $ref: '#/components/schemas/VerificationResult'
-                  
-        '401':
+                        description: Application id
+                        format: ObjectId
+                        example: 5e62110968e3fb4d655756d1
+                  - $ref: "#/components/schemas/VerificationResult"
+
+        "401":
           description: error, missing or wrong authorization headers
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
                     type: integer
                   errorMessage:
                     type: string
-                    example: 'Unauthorized'
-        '402':
+                    example: "Unauthorized"
+        "402":
           description: error, Bad data. Application with Id {id} not found
           content:
-            'application/json':
+            "application/json":
               schema:
                 properties:
                   responseCode:
@@ -139,28 +145,37 @@ components:
       type: object
       properties:
         metadata:
-          $ref: '#/components/schemas/SourceMetadata'
-        #extensions:
-        #  $ref: '#/components/schemas/Extensions'
+          $ref: "#/components/schemas/SourceMetadata"
         application:
-          $ref: '#/components/schemas/Application'
+          $ref: "#/components/schemas/Application"
         verificationTypes:
-          $ref: '#/components/schemas/VerificationTypes'
+          $ref: "#/components/schemas/VerificationTypes"
     VerificationResult:
       allOf:
-        - $ref: '#/components/schemas/EnvelopedApplication'
         - type: object
           properties:
-            processStatus: 
-              $ref: '#/components/schemas/ProcessStatus'
+            metadata:
+              $ref: "#/components/schemas/ResultMetadata"
+            application:
+              $ref: "#/components/schemas/Application"
+            verificationTypes:
+              $ref: "#/components/schemas/VerificationTypes"
+            processStatus:
+              $ref: "#/components/schemas/ProcessStatus"
             overallResult:
-              $ref: '#/components/schemas/OverallResult'
+              $ref: "#/components/schemas/OverallResult"
             servicesResults:
-              $ref: '#/components/schemas/ServiceResults'
-        
-        
-    Application: 
+              $ref: "#/components/schemas/ServiceResults"
+          required:
+            - metadata
+            - application
+            - processStatus
+            - id
+            - responseCode
+
+    Application:
       type: object
+      description: This object contains information for verifications
       properties:
         customerId:
           nullable: true
@@ -173,9 +188,9 @@ components:
             Array of data which you would like check.
             For example: it will be data from web form with last name and date of birth
           nullable: true
-          items: 
-            $ref: '#/components/schemas/Field'
-          example: 
+          items:
+            $ref: "#/components/schemas/Field"
+          example:
             - contentType: string
               content: Firs Name
               category: Artem
@@ -197,15 +212,15 @@ components:
               issuingCountry:
                 type: string
                 description: Country code of country of issue
-                format: 'ISO 3166'
+                format: "ISO 3166"
                 example: UK
               documentType:
-                $ref:  '#/components/schemas/DocumentType'
+                $ref: "#/components/schemas/DocumentType"
               files:
-                description: document photos or scans 
+                description: document photos or scans
                 type: array
-                items: 
-                  $ref: '#/components/schemas/DocumentMedia'
+                items:
+                  $ref: "#/components/schemas/DocumentMedia"
             required:
               - images
               # mrz:
@@ -216,28 +231,28 @@ components:
               #     $ref: '#/components/schemas/Field'
           required: [images]
         selfie:
+          nullable: true
+          description: Object contains information for `face-matching` or `liveness`
           properties:
             files:
               type: array
               description: list of selfie for face-matching
               items:
-                $ref: '#/components/schemas/FacesMedia'
+                $ref: "#/components/schemas/FacesMedia"
           require:
             - files
-    
+
     Field:
       type: object
       oneOf:
-        - $ref: '#/components/schemas/StringField'
-        - $ref: '#/components/schemas/DateField'
-        - $ref: '#/components/schemas/SexField'
-        - $ref: '#/components/schemas/BoolField'
-        - $ref: '#/components/schemas/CountryField'
-        - $ref: '#/components/schemas/NumberField'
-          
-        
-    
-    FiledBase: 
+        - $ref: "#/components/schemas/StringField"
+        - $ref: "#/components/schemas/DateField"
+        - $ref: "#/components/schemas/SexField"
+        - $ref: "#/components/schemas/BoolField"
+        - $ref: "#/components/schemas/CountryField"
+        - $ref: "#/components/schemas/NumberField"
+
+    FiledBase:
       type: object
       properties:
         category:
@@ -251,9 +266,9 @@ components:
           description: |
             Check of data is required.
             If this flag is true and we could not check this data from document,
-            application status is going to decline 
+            application status is going to decline
           example: true
-    
+
     StringField:
       type: object
       allOf:
@@ -265,9 +280,9 @@ components:
             content:
               type: string
               description: The value of field
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
-    
+
     DateField:
       type: object
       allOf:
@@ -280,9 +295,9 @@ components:
               format: date
               type: string
               description: The value with date
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
-    
+
     SexField:
       type: object
       allOf:
@@ -295,9 +310,9 @@ components:
               enum: [male, female]
               type: string
               description: male or female
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
-    
+
     NumberField:
       type: object
       allOf:
@@ -310,7 +325,7 @@ components:
               format: number
               type: string
               description: The number value
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
 
     CountryField:
@@ -322,11 +337,11 @@ components:
               type: string
               enum: [country]
             content:
-              format: 'ISO 3166'
+              format: "ISO 3166"
               type: string
               example: US
               description: Country code
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
 
     BoolField:
@@ -344,13 +359,15 @@ components:
               type: string
               example: true
               description: The bool value
-        - $ref: '#/components/schemas/FiledBase'
+        - $ref: "#/components/schemas/FiledBase"
       required: [content, category, contentType]
 
-  
     FacesMedia:
       type: object
       properties:
+        id:
+          type: string
+          description: id of file (if value didn't send we will fill it)
         mediaType:
           type: string
           description: media-type of content
@@ -360,10 +377,13 @@ components:
           type: string
           example: "data:image/png;base64,R0lGODlhDAAMAK..."
       required: [mediaType, kind, url]
-    
+
     DocumentMedia:
       type: object
       properties:
+        id:
+          type: string
+          description: id of file (if value didn't send we will fill it)
         mediaType:
           type: string
           description: media-type of content
@@ -384,7 +404,7 @@ components:
 
     Extensions:
       type: array
-      items: 
+      items:
         type: object
         properties:
           extension:
@@ -397,25 +417,62 @@ components:
         required: [extension, extensionData]
 
     OverallResult:
+      nullable: true
       type: object
+      description: Summary verification result. Will be null if status is not `done`
       properties:
         status:
-          $ref: '#/components/schemas/VerificationStatus'
-        identifierComment:
-          type: string
+          description: the worst result from all services
+          $ref: "#/components/schemas/VerificationStatus"
+
+        identifierComments:
+          type: array
+          description: Array of results all services (You can find full results in a servicesResults section)
+          items:
+            type: object
+            properties:
+              service:
+                description: Service name
+                type: string
+              text:
+                description: Short comment for result
+                type: string
+              status:
+                $ref: "#/components/schemas/VerificationStatus"
+          example:
+            - service: face-matching
+              text: faces are similar
+              status: approved
+            - service: watchlists
+              text: "found 2 reports against the person"
+              status: declined
+            - service: extract-data
+              text: data was extracted
+              status: approved
+
         validationDate:
           type: string
+          description: Date of finish validation
           format: date-time
+          example: "2020-03-17T20:28:37.061Z"
       additionalProperties: false
       required:
         - status
+        - identifierComments
+        - validationDate
     VerificationStatus:
       type: string
+      description: |
+        result of verification
+        * `approved` - we didn't find problems
+        * `declined` - TODO
+        * `review-needed` - TODO
+        * `error` - service is finished with  error
       enum:
         - declined
         - approved
-        - processing
         - review-needed
+        - error
     ProcessStatus:
       type: string
       enum:
@@ -432,14 +489,6 @@ components:
         Max count of fields is 30
       maxProperties: 30
       properties:
-        # createDate:
-        #   description: date and time of creating application
-        #   type: string
-        #   format: date-time
-        #   example:
-        #     - "2020-03-17T20:28:37.061Z"
-        # ipAddress:
-        #   type: string
         platform:
           type: string
           description: The version of os where was created an application
@@ -447,12 +496,6 @@ components:
             - android
             - ios
             - web
-        createDate:
-          type: string
-          description: Date and time of creating application
-          format: date-time
-          example: "2020-03-17T20:28:37.061Z"
-        
         appName:
           type: string
           description: The name of application which is doing request
@@ -473,67 +516,98 @@ components:
       example:
         platform: android
         locale: en_US
-        createDate: "2020-03-17T20:28:37.061Z"
         appName: my-api-client
         appVersion: 1.0.0
         x-my-custom-meta-name-1: custom-value-1
         x-my-custom-meta-name-2: custom-value-2
+    ResultMetadata:
+      allOf:
+        - type: object
+          properties:
+            ip:
+              type: string
+              description: IP from which the request was sent
+              format: ip
+              example: 8.8.8.8
+            createdAt:
+              description: time when the application was created
+              type: string
+              format: date-time
+              example: "2020-03-17T20:28:37.061Z"
+        - $ref: "#/components/schemas/SourceMetadata"
+      nullable: false
 
     ServiceResults:
       type: object
       properties:
         faceMatching:
-          type: array
-          items:
-            $ref: '#/components/schemas/FaceMatching'
-        liveness:
-          type: array
-          items:
-            $ref: '#/components/schemas/Liveness'
+          $ref: "#/components/schemas/FaceMatching"
+        #liveness:
+        #  $ref: "#/components/schemas/Liveness"
         dataExtraction:
-          type: array
-          items:
-            $ref: '#/components/schemas/DataExtraction'
+          $ref: "#/components/schemas/DataExtraction"
         crossChecking:
-          type: array
-          items:
-            $ref: '#/components/schemas/CrossChecking'
+          $ref: "#/components/schemas/CrossChecking"
         watchlists:
-          type: array
-          items:
-            $ref: '#/components/schemas/Watchlists'
+          $ref: "#/components/schemas/Watchlists"
       additionalProperties: false
+      nullable: true
     FaceMatching:
       type: object
+      description: Service of face-matching. Service try check user on document and selfie
       properties:
-        identifierComment:
+        comment:
+          description: Short comment for result
           type: string
         verifier:
+          description: Name of verifier
           type: string
         status:
-          $ref: '#/components/schemas/VerificationStatus'
+          $ref: "#/components/schemas/VerificationStatus"
         processStatus:
-          $ref: '#/components/schemas/ProcessStatus'
+          $ref: "#/components/schemas/ProcessStatus"
         results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FaceMatchingResult'
+          $ref: "#/components/schemas/FaceMatchingResult"
+        settings:
+          type: object
+          description: settings for determining the status
+          properties:
+            declineMaxScore:
+              description: level to which a decision will be made about `declined` status
+              type: number
+              example: 0.4
+            approveMinScore:
+              description: level from which a decision will be made about `approve` status
+              type: number
+              example: 0.6
       required:
         - status
+      examples:
+        - status: approved
+          verifier: SphereX
+          comment: Faces are similar
+          settings:
+            declineMaxScore: 0.4
+            approveMinScore: 0.6
+          results:
+            score: 0.7
       additionalProperties: false
     FaceMatchingResult:
       type: object
+      description: Results of face matching service
       properties:
-        contentType:
-          $ref: '#/components/schemas/ContentType'
-        category:
-          type: string
-        content:
-          type: string
+        files:
+          description: list of id files which was involved in checking (from selfie and documents)
+          type: array
+          items:
+            type: string
+        score:
+          description: score of similar faces
+          type: number
+          example: 0.3
       required:
-        - contentType
-        - category
-        - content
+        - score
+        - files
       additionalProperties: false
     Liveness:
       type: object
@@ -543,13 +617,13 @@ components:
         verifier:
           type: string
         status:
-          $ref: '#/components/schemas/VerificationStatus'
+          $ref: "#/components/schemas/VerificationStatus"
         results:
           type: array
           items:
-            $ref: '#/components/schemas/LivenessResult'
+            $ref: "#/components/schemas/LivenessResult"
         processStatus:
-          $ref: '#/components/schemas/ProcessStatus'
+          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -558,32 +632,67 @@ components:
     DataExtraction:
       type: object
       properties:
-        identifierComment:
+        comment:
           type: string
         verifier:
           type: string
         status:
-          $ref: '#/components/schemas/VerificationStatus'
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DataExtractionResult'
+          $ref: "#/components/schemas/VerificationStatus"
+        extracted:
+          ocr:
+            nullable: true
+            type: array
+            items:
+              $ref: "#/components/schemas/DataExtractionResult"
+          mrz:
+            nullable: true
+            type: array
+            items:
+              $ref: "#/components/schemas/DataExtractionResult"
+          nfc:
+            nullable: true
+            type: array
+            items:
+              $ref: "#/components/schemas/DataExtractionResult"
         processStatus:
-          $ref: '#/components/schemas/ProcessStatus'
+          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
+      example:
+        comment: Data was extracted
+        verifier: Regula
+        status: approved
+        extracted:
+          ocr:
+            - contentType: string
+              category: First name
+              content: Joe
+            - contentType: string
+              category: Last name
+              content: Black
+          mrz:
+            - contentType: string
+              category: First name
+              content: James
+            - contentType: string
+              category: Last name
+              content: Black
+          nfc:
+            - contentType: string
+              category: First name
+              content: Joe
+            - contentType: string
+              category: Last name
+              content: Black
+
     DataExtractionResult:
       type: object
       properties:
         contentType:
-          $ref: '#/components/schemas/ContentType'
+          $ref: "#/components/schemas/ContentType"
         category:
           type: string
-          example:
-            - First name
-            - Last name
-            - Date of Birth
         content:
           type: string
       required:
@@ -591,6 +700,7 @@ components:
         - category
         - content
       additionalProperties: false
+
     CrossChecking:
       type: object
       properties:
@@ -599,13 +709,13 @@ components:
         verifier:
           type: string
         status:
-          $ref: '#/components/schemas/VerificationStatus'
+          $ref: "#/components/schemas/VerificationStatus"
         results:
           type: array
           items:
-            $ref: '#/components/schemas/CrossCheckingResult'
+            $ref: "#/components/schemas/CrossCheckingResult"
         processStatus:
-          $ref: '#/components/schemas/ProcessStatus'
+          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -635,13 +745,13 @@ components:
         verifier:
           type: string
         status:
-          $ref: '#/components/schemas/VerificationStatus'
+          $ref: "#/components/schemas/VerificationStatus"
         results:
           type: array
           items:
-            $ref: '#/components/schemas/WatchlistsResult'
+            $ref: "#/components/schemas/WatchlistsResult"
         processStatus:
-          $ref: '#/components/schemas/ProcessStatus'
+          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -649,7 +759,7 @@ components:
       type: object
       properties:
         contentType:
-          $ref: '#/components/schemas/ContentType'
+          $ref: "#/components/schemas/ContentType"
         category:
           type: string
         content:
@@ -668,22 +778,22 @@ components:
         - date
         - country
         - boolean
-    
+
     VerificationTypes:
+      nullable: true
       type: array
       description: |
         It's list of verification which you want to do:
-        * watchlists - It's check user on PEPs. You can fill fields (first name, last name)
-        * face-matching - We will try check photo on document and selfie. You can fill selfie list and document list
-        * extract-data - We will try extract data from documents. You can fill documents
+        * watchlists - It's check user on PEPs. You should fill fields (first name, last name)
+        * face-matching - We will try check photo on document and selfie. You should fill selfie list and document list
+        * extract-data - We will try extract data from documents. You should fill documents
         * crosschecking - You send information about user and we will check a conformity between it and extracted data
         If you don't send this field we do all verification what we can. You can fill documents and fields
       items:
         nullable: true
         type: string
-        enum: ['watchlists', 'face-matching', 'extract-data', 'crosschecking']
-      example:
-         ['watchlists', 'face-matching', 'extract-data']
+        enum: ["watchlists", "face-matching", "extract-data", "crosschecking"]
+      example: ["watchlists", "face-matching", "extract-data"]
 
     DocumentType:
       type: string

@@ -122,7 +122,7 @@
             "get": {
                 "security": [
                     {
-                        "bearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Allows to get verifired application",
@@ -147,10 +147,16 @@
                                             "type": "object",
                                             "properties": {
                                                 "responseCode": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "description": "contains HTTP code (200)",
+                                                    "value": 200,
+                                                    "example": 200
                                                 },
                                                 "id": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "description": "Application id",
+                                                    "format": "ObjectId",
+                                                    "example": "5e62110968e3fb4d655756d1"
                                                 }
                                             }
                                         },
@@ -225,11 +231,17 @@
             "VerificationResult": {
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/EnvelopedApplication"
-                    },
-                    {
                         "type": "object",
                         "properties": {
+                            "metadata": {
+                                "$ref": "#/components/schemas/ResultMetadata"
+                            },
+                            "application": {
+                                "$ref": "#/components/schemas/Application"
+                            },
+                            "verificationTypes": {
+                                "$ref": "#/components/schemas/VerificationTypes"
+                            },
                             "processStatus": {
                                 "$ref": "#/components/schemas/ProcessStatus"
                             },
@@ -239,12 +251,20 @@
                             "servicesResults": {
                                 "$ref": "#/components/schemas/ServiceResults"
                             }
-                        }
+                        },
+                        "required": [
+                            "metadata",
+                            "application",
+                            "processStatus",
+                            "id",
+                            "responseCode"
+                        ]
                     }
                 ]
             },
             "Application": {
                 "type": "object",
+                "description": "This object contains information for verifications",
                 "properties": {
                     "customerId": {
                         "nullable": true,
@@ -312,6 +332,8 @@
                         ]
                     },
                     "selfie": {
+                        "nullable": true,
+                        "description": "Object contains information for `face-matching` or `liveness`",
                         "properties": {
                             "files": {
                                 "type": "array",
@@ -550,6 +572,10 @@
             "FacesMedia": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "id of file (if value didn't send we will fill it)"
+                    },
                     "mediaType": {
                         "type": "string",
                         "description": "media-type of content",
@@ -570,6 +596,10 @@
             "DocumentMedia": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "id of file (if value didn't send we will fill it)"
+                    },
                     "mediaType": {
                         "type": "string",
                         "description": "media-type of content",
@@ -618,31 +648,73 @@
                 }
             },
             "OverallResult": {
+                "nullable": true,
                 "type": "object",
+                "description": "Summary verification result. Will be null if status is not `done`",
                 "properties": {
                     "status": {
+                        "description": "the worst result from all services",
                         "$ref": "#/components/schemas/VerificationStatus"
                     },
-                    "identifierComment": {
-                        "type": "string"
+                    "identifierComments": {
+                        "type": "array",
+                        "description": "Array of results all services (You can find full results in a servicesResults section)",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "service": {
+                                    "description": "Service name",
+                                    "type": "string"
+                                },
+                                "text": {
+                                    "description": "Short comment for result",
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "$ref": "#/components/schemas/VerificationStatus"
+                                }
+                            }
+                        },
+                        "example": [
+                            {
+                                "service": "face-matching",
+                                "text": "faces are similar",
+                                "status": "approved"
+                            },
+                            {
+                                "service": "watchlists",
+                                "text": "found 2 reports against the person",
+                                "status": "declined"
+                            },
+                            {
+                                "service": "extract-data",
+                                "text": "data was extracted",
+                                "status": "approved"
+                            }
+                        ]
                     },
                     "validationDate": {
                         "type": "string",
-                        "format": "date-time"
+                        "description": "Date of finish validation",
+                        "format": "date-time",
+                        "example": "2020-03-17T20:28:37.061Z"
                     }
                 },
                 "additionalProperties": false,
                 "required": [
-                    "status"
+                    "status",
+                    "identifierComments",
+                    "validationDate"
                 ]
             },
             "VerificationStatus": {
                 "type": "string",
+                "description": "result of verification\n* `approved` - we didn't find problems\n* `declined` - TODO\n* `review-needed` - TODO\n* `error` - service is finished with  error\n",
                 "enum": [
                     "declined",
                     "approved",
-                    "processing",
-                    "review-needed"
+                    "review-needed",
+                    "error"
                 ]
             },
             "ProcessStatus": {
@@ -667,12 +739,6 @@
                             "ios",
                             "web"
                         ]
-                    },
-                    "createDate": {
-                        "type": "string",
-                        "description": "Date and time of creating application",
-                        "format": "date-time",
-                        "example": "2020-03-17T20:28:37.061Z"
                     },
                     "appName": {
                         "type": "string",
@@ -699,56 +765,66 @@
                 "example": {
                     "platform": "android",
                     "locale": "en_US",
-                    "createDate": "2020-03-17T20:28:37.061Z",
                     "appName": "my-api-client",
                     "appVersion": "1.0.0",
                     "x-my-custom-meta-name-1": "custom-value-1",
                     "x-my-custom-meta-name-2": "custom-value-2"
                 }
             },
+            "ResultMetadata": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "ip": {
+                                "type": "string",
+                                "description": "IP from which the request was sent",
+                                "format": "ip",
+                                "example": "8.8.8.8"
+                            },
+                            "createdAt": {
+                                "description": "time when the application was created",
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2020-03-17T20:28:37.061Z"
+                            }
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/SourceMetadata"
+                    }
+                ],
+                "nullable": false
+            },
             "ServiceResults": {
                 "type": "object",
                 "properties": {
                     "faceMatching": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/FaceMatching"
-                        }
-                    },
-                    "liveness": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Liveness"
-                        }
+                        "$ref": "#/components/schemas/FaceMatching"
                     },
                     "dataExtraction": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/DataExtraction"
-                        }
+                        "$ref": "#/components/schemas/DataExtraction"
                     },
                     "crossChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CrossChecking"
-                        }
+                        "$ref": "#/components/schemas/CrossChecking"
                     },
                     "watchlists": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Watchlists"
-                        }
+                        "$ref": "#/components/schemas/Watchlists"
                     }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "nullable": true
             },
             "FaceMatching": {
                 "type": "object",
+                "description": "Service of face-matching. Service try check user on document and selfie",
                 "properties": {
-                    "identifierComment": {
+                    "comment": {
+                        "description": "Short comment for result",
                         "type": "string"
                     },
                     "verifier": {
+                        "description": "Name of verifier",
                         "type": "string"
                     },
                     "status": {
@@ -758,34 +834,64 @@
                         "$ref": "#/components/schemas/ProcessStatus"
                     },
                     "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/FaceMatchingResult"
+                        "$ref": "#/components/schemas/FaceMatchingResult"
+                    },
+                    "settings": {
+                        "type": "object",
+                        "description": "settings for determining the status",
+                        "properties": {
+                            "declineMaxScore": {
+                                "description": "level to which a decision will be made about `declined` status",
+                                "type": "number",
+                                "example": 0.4
+                            },
+                            "approveMinScore": {
+                                "description": "level from which a decision will be made about `approve` status",
+                                "type": "number",
+                                "example": 0.6
+                            }
                         }
                     }
                 },
                 "required": [
                     "status"
                 ],
+                "examples": [
+                    {
+                        "status": "approved",
+                        "verifier": "SphereX",
+                        "comment": "Faces are similar",
+                        "settings": {
+                            "declineMaxScore": 0.4,
+                            "approveMinScore": 0.6
+                        },
+                        "results": {
+                            "score": 0.7
+                        }
+                    }
+                ],
                 "additionalProperties": false
             },
             "FaceMatchingResult": {
                 "type": "object",
+                "description": "Results of face matching service",
                 "properties": {
-                    "contentType": {
-                        "$ref": "#/components/schemas/ContentType"
+                    "files": {
+                        "description": "list of id files which was involved in checking (from selfie and documents)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
-                    "category": {
-                        "type": "string"
-                    },
-                    "content": {
-                        "type": "string"
+                    "score": {
+                        "description": "score of similar faces",
+                        "type": "number",
+                        "example": 0.3
                     }
                 },
                 "required": [
-                    "contentType",
-                    "category",
-                    "content"
+                    "score",
+                    "files"
                 ],
                 "additionalProperties": false
             },
@@ -822,7 +928,7 @@
             "DataExtraction": {
                 "type": "object",
                 "properties": {
-                    "identifierComment": {
+                    "comment": {
                         "type": "string"
                     },
                     "verifier": {
@@ -831,10 +937,27 @@
                     "status": {
                         "$ref": "#/components/schemas/VerificationStatus"
                     },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/DataExtractionResult"
+                    "extracted": {
+                        "ocr": {
+                            "nullable": true,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/DataExtractionResult"
+                            }
+                        },
+                        "mrz": {
+                            "nullable": true,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/DataExtractionResult"
+                            }
+                        },
+                        "nfc": {
+                            "nullable": true,
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/DataExtractionResult"
+                            }
                         }
                     },
                     "processStatus": {
@@ -844,7 +967,50 @@
                 "required": [
                     "status"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "example": {
+                    "comment": "Data was extracted",
+                    "verifier": "Regula",
+                    "status": "approved",
+                    "extracted": {
+                        "ocr": [
+                            {
+                                "contentType": "string",
+                                "category": "First name",
+                                "content": "Joe"
+                            },
+                            {
+                                "contentType": "string",
+                                "category": "Last name",
+                                "content": "Black"
+                            }
+                        ],
+                        "mrz": [
+                            {
+                                "contentType": "string",
+                                "category": "First name",
+                                "content": "James"
+                            },
+                            {
+                                "contentType": "string",
+                                "category": "Last name",
+                                "content": "Black"
+                            }
+                        ],
+                        "nfc": [
+                            {
+                                "contentType": "string",
+                                "category": "First name",
+                                "content": "Joe"
+                            },
+                            {
+                                "contentType": "string",
+                                "category": "Last name",
+                                "content": "Black"
+                            }
+                        ]
+                    }
+                }
             },
             "DataExtractionResult": {
                 "type": "object",
@@ -853,12 +1019,7 @@
                         "$ref": "#/components/schemas/ContentType"
                     },
                     "category": {
-                        "type": "string",
-                        "example": [
-                            "First name",
-                            "Last name",
-                            "Date of Birth"
-                        ]
+                        "type": "string"
                     },
                     "content": {
                         "type": "string"
@@ -982,8 +1143,9 @@
                 ]
             },
             "VerificationTypes": {
+                "nullable": true,
                 "type": "array",
-                "description": "It's list of verification which you want to do:\n* watchlists - It's check user on PEPs. You can fill fields (first name, last name)\n* face-matching - We will try check photo on document and selfie. You can fill selfie list and document list\n* extract-data - We will try extract data from documents. You can fill documents\n* crosschecking - You send information about user and we will check a conformity between it and extracted data\nIf you don't send this field we do all verification what we can. You can fill documents and fields\n",
+                "description": "It's list of verification which you want to do:\n* watchlists - It's check user on PEPs. You should fill fields (first name, last name)\n* face-matching - We will try check photo on document and selfie. You should fill selfie list and document list\n* extract-data - We will try extract data from documents. You should fill documents\n* crosschecking - You send information about user and we will check a conformity between it and extracted data\nIf you don't send this field we do all verification what we can. You can fill documents and fields\n",
                 "items": {
                     "nullable": true,
                     "type": "string",
