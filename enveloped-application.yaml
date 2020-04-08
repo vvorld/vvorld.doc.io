@@ -20,7 +20,7 @@ info:
     Information about API
 
 paths:
-  /plugins/v1/acceptor/application:
+  /api/v1/application:
     post:
       security:
         - ApiKeyAuth: []
@@ -74,7 +74,7 @@ paths:
                   responseCode:
                     type: integer
                     enum: [402]
-  /plugins/v1/acceptor/application/{id}:
+  /api/v1/application/{id}:
     get:
       security:
         - ApiKeyAuth: []
@@ -648,6 +648,10 @@ components:
               category: First name
               content: Joe
             - contentType: string
+              category: First name
+              content: Джо
+              locale: ru_RU
+            - contentType: string
               category: Last name
               content: Black
           mrz:
@@ -676,6 +680,10 @@ components:
         content:
           type: string
           description: The value of the extracted field
+        locale:
+          type: string
+          description: The locale of the extracted value
+          examples: [en_UK, en_AU, zh_CN, zh_SG]
       required:
         - contentType
         - category
@@ -709,13 +717,13 @@ components:
             - First name
             - Last name
             - Date of Birth
-        form:
+        field:
           type: string
         extracted:
           type: string
       required:
         - category
-        - form
+        - field
         - extracted
       additionalProperties: false
     Watchlists:

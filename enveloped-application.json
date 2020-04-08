@@ -20,7 +20,7 @@
       "description": "\n# API\nInformation about API\n\n# SDK\nInformation about API\n"
     },
     "paths": {
-      "/plugins/v1/acceptor/application": {
+      "/api/v1/application": {
         "post": {
           "security": [
             {
@@ -118,7 +118,7 @@
           }
         }
       },
-      "/plugins/v1/acceptor/application/{id}": {
+      "/api/v1/application/{id}": {
         "get": {
           "security": [
             {
@@ -971,6 +971,12 @@
                 },
                 {
                   "contentType": "string",
+                  "category": "First name",
+                  "content": "Джо",
+                  "locale": "ru_RU"
+                },
+                {
+                  "contentType": "string",
                   "category": "Last name",
                   "content": "Black"
                 }
@@ -1015,6 +1021,16 @@
             "content": {
               "type": "string",
               "description": "The value of the extracted field"
+            },
+            "locale": {
+              "type": "string",
+              "description": "The locale of the extracted value",
+              "examples": [
+                "en_UK",
+                "en_AU",
+                "zh_CN",
+                "zh_SG"
+              ]
             }
           },
           "required": [
@@ -1062,7 +1078,7 @@
                 "Date of Birth"
               ]
             },
-            "form": {
+            "field": {
               "type": "string"
             },
             "extracted": {
@@ -1071,7 +1087,7 @@
           },
           "required": [
             "category",
-            "form",
+            "field",
             "extracted"
           ],
           "additionalProperties": false
