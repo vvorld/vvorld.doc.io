@@ -13,7 +13,7 @@ info:
 
   description: |
 
-    # API 
+    # API
     Information about API
 
     # SDK
@@ -24,14 +24,12 @@ paths:
     post:
       security:
         - ApiKeyAuth: []
-      description: Allows to send data to verification
+      description: Send application for verification
       requestBody:
         content:
           "application/json":
             schema:
-              properties:
-                envelopedApplication:
-                  $ref: "#/components/schemas/EnvelopedApplication"
+              $ref: "#/components/schemas/EnvelopedApplication"
       responses:
         "200":
           description: OK
@@ -40,51 +38,47 @@ paths:
               schema:
                 properties:
                   responseCode:
-                    value: 200
-                    example: 200
                     type: integer
+                    enum: [200]
                   id:
                     type: string
                     format: ObjectId
                     example: 5e62110968e3fb4d655756d1
-        "401":
-          description: error, missing or wrong authorization headers
+        "400":
+          description: Empty request body
           content:
             "application/json":
               schema:
                 properties:
                   responseCode:
-                    value: 401
-                    example: 401
                     type: integer
+                    enum: [400]
+        "401":
+          description: Missing or wrong authorization headers
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [401]
                   errorMessage:
                     type: string
-                    example: "Unauthorized"
+                    example: Unauthorized
         "402":
-          description: error, wrong format or missing data
+          description: Wrong format or missing data
           content:
             "application/json":
               schema:
                 properties:
                   responseCode:
-                    value: 402
-                    example: 402
                     type: integer
-        "400":
-          description: error, empty request body
-          content:
-            "application/json":
-              schema:
-                properties:
-                  responseCode:
-                    value: 400
-                    example: 400
-                    type: integer
+                    enum: [402]
   /plugins/v1/acceptor/application/{id}:
     get:
       security:
         - ApiKeyAuth: []
-      description: Allows to get verifired application
+      description: Get verified application
       parameters:
         - in: path
           name: id
@@ -97,40 +91,30 @@ paths:
           content:
             "application/json":
               schema:
-                allOf:
-                  - type: object
-                    properties:
-                      responseCode:
-                        type: integer
-                        description: contains HTTP code (200)
-                        value: 200
-                        example: 200
-                      id:
-                        type: string
-                        description: Application id
-                        format: ObjectId
-                        example: 5e62110968e3fb4d655756d1
-                  - $ref: "#/components/schemas/VerificationResult"
+                $ref: "#/components/schemas/VerificationResult"
 
         "401":
-          description: error, missing or wrong authorization headers
+          description: Missing or wrong authorization headers
           content:
             "application/json":
               schema:
                 properties:
                   responseCode:
                     type: integer
+                    enum: [401]
                   errorMessage:
                     type: string
-                    example: "Unauthorized"
+                    example: Unauthorized
         "402":
-          description: error, Bad data. Application with Id {id} not found
+          description: Application not found
           content:
             "application/json":
               schema:
                 properties:
                   responseCode:
                     type: integer
+                    enum: [402]
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -139,7 +123,7 @@ components:
       name: X-API-Key
       description: |
         You can find token on settings page.
-        It's header is required foa all API methods
+        It's required for all API methods.
   schemas:
     EnvelopedApplication:
       type: object
@@ -151,48 +135,51 @@ components:
         verificationTypes:
           $ref: "#/components/schemas/VerificationTypes"
     VerificationResult:
-      allOf:
-        - type: object
-          properties:
-            metadata:
-              $ref: "#/components/schemas/ResultMetadata"
-            application:
-              $ref: "#/components/schemas/Application"
-            verificationTypes:
-              $ref: "#/components/schemas/VerificationTypes"
-            processStatus:
-              $ref: "#/components/schemas/ProcessStatus"
-            overallResult:
-              $ref: "#/components/schemas/OverallResult"
-            servicesResults:
-              $ref: "#/components/schemas/ServiceResults"
-          required:
-            - metadata
-            - application
-            - processStatus
-            - id
-            - responseCode
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          description: contains HTTP code (200)
+          enum: [200]
+        id:
+          type: string
+          description: Application id
+          format: ObjectId
+          example: 5e62110968e3fb4d655756d1
+        metadata:
+          $ref: "#/components/schemas/ResultMetadata"
+        application:
+          $ref: "#/components/schemas/Application"
+        verificationTypes:
+          $ref: "#/components/schemas/VerificationTypes"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
+        overallResult:
+          $ref: "#/components/schemas/OverallResult"
+        servicesResults:
+          $ref: "#/components/schemas/ServiceResults"
+      required:
+        - id
+        - responseCode
+        - metadata
+        - application
+        - processingState
 
     Application:
       type: object
-      description: This object contains information for verifications
+      description: The data to verify
       properties:
-        customerId:
-          nullable: true
-          type: string
-          description: Use this field to save custom ID from you system
-          example: "go-1984"
         fields:
           type: array
           description: |
-            Array of data which you would like check.
-            For example: it will be data from web form with last name and date of birth
-          nullable: true
+            Data fields to check.
+
+            For example: Last Name and Date of Birth sent from web form
           items:
             $ref: "#/components/schemas/Field"
           example:
             - contentType: string
-              content: Firs Name
+              content: First Name
               category: Artem
               requireCheck: true
             - contentType: string
@@ -202,44 +189,38 @@ components:
             - contentType: sex
               content: male
               category: sex
+            - contentType: bool
+              content: "true"
+              category: Agree on something
         documents:
           type: array
-          nullable: true
-          description: list of document for data extracting or crosschecking
+          description: Documents for data extraction or cross-checking
           items:
             type: object
             properties:
               issuingCountry:
                 type: string
-                description: Country code of country of issue
-                format: "ISO 3166"
-                example: UK
+                description: Country code of country of issue https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+                pattern: ^[a-zA-Z]{2}$
+                examples: [UK, GB, DE]
               documentType:
                 $ref: "#/components/schemas/DocumentType"
               files:
-                description: document photos or scans
+                description: Document photos or scans
                 type: array
                 items:
                   $ref: "#/components/schemas/DocumentMedia"
             required:
-              - images
-              # mrz:
-              #   type: string
-              # nfc:
-              #   type: array
-              #   items:
-              #     $ref: '#/components/schemas/Field'
-          required: [images]
+              - files
         selfie:
-          nullable: true
-          description: Object contains information for `face-matching` or `liveness`
+          description: Information for `face-matching` or `liveness`
           properties:
             files:
               type: array
-              description: list of selfie for face-matching
+              description: list of selfies for face-matching
               items:
                 $ref: "#/components/schemas/FacesMedia"
-          require:
+          required:
             - files
 
     Field:
@@ -252,22 +233,16 @@ components:
         - $ref: "#/components/schemas/CountryField"
         - $ref: "#/components/schemas/NumberField"
 
-    FiledBase:
+    FieldBase:
       type: object
       properties:
         category:
           type: string
           description: |
-            Kind of data. For example: first name, last name...
-        requireCheck:
-          nullable: true
-          default: false
-          type: boolean
-          description: |
-            Check of data is required.
-            If this flag is true and we could not check this data from document,
-            application status is going to decline
-          example: true
+            Kind of data.
+
+            For example: First Name, Date of Birth...
+          examples: [First Name, Date of Birth]
 
     StringField:
       type: object
@@ -279,8 +254,8 @@ components:
               enum: [string]
             content:
               type: string
-              description: The value of field
-        - $ref: "#/components/schemas/FiledBase"
+              description: String value
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     DateField:
@@ -295,7 +270,7 @@ components:
               format: date
               type: string
               description: The value with date
-        - $ref: "#/components/schemas/FiledBase"
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     SexField:
@@ -310,7 +285,7 @@ components:
               enum: [male, female]
               type: string
               description: male or female
-        - $ref: "#/components/schemas/FiledBase"
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     NumberField:
@@ -325,7 +300,7 @@ components:
               format: number
               type: string
               description: The number value
-        - $ref: "#/components/schemas/FiledBase"
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     CountryField:
@@ -337,11 +312,11 @@ components:
               type: string
               enum: [country]
             content:
-              format: "ISO 3166"
               type: string
-              example: US
-              description: Country code
-        - $ref: "#/components/schemas/FiledBase"
+              description: The country code https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+              pattern: ^[a-zA-Z]{2}$
+              examples: [UK, GB, DE]
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     BoolField:
@@ -354,12 +329,12 @@ components:
               enum: [bool]
             content:
               enum:
-                - true
-                - false
+                - "true"
+                - "false"
               type: string
-              example: true
+              example: "true"
               description: The bool value
-        - $ref: "#/components/schemas/FiledBase"
+        - $ref: "#/components/schemas/FieldBase"
       required: [content, category, contentType]
 
     FacesMedia:
@@ -367,27 +342,21 @@ components:
       properties:
         id:
           type: string
-          description: id of file (if value didn't send we will fill it)
-        mediaType:
-          type: string
-          description: media-type of content
-          example: image/png
+          description: file id (filled automatically when missing)
         url:
-          description: address from which we can download or blob
+          description: URL address of downloadable image or Data URI
           type: string
-          example: "data:image/png;base64,R0lGODlhDAAMAK..."
-      required: [mediaType, kind, url]
+          examples:
+            - data:image/png;base64,R0lGODlhDAAMAK...
+            - https://example.com/image.jpg
+      required: [url]
 
     DocumentMedia:
       type: object
       properties:
         id:
           type: string
-          description: id of file (if value didn't send we will fill it)
-        mediaType:
-          type: string
-          description: media-type of content
-          example: image/png
+          description: file id (filled automatically when missing)
         kind:
           type: string
           description: kind of document page
@@ -397,10 +366,12 @@ components:
             - page
           example: front
         url:
-          description: address from which we can download or blob
+          description: URL address of downloadable image or Data URI
           type: string
-          example: "data:image/png;base64,R0lGODlhDAAMAK..."
-      required: [mediaType, kind, url]
+          examples:
+            - data:image/png;base64,R0lGODlhDAAMAK...
+            - https://example.com/image.jpg
+      required: [url, kind]
 
     Extensions:
       type: array
@@ -419,15 +390,14 @@ components:
     OverallResult:
       nullable: true
       type: object
-      description: Summary verification result. Will be null if status is not `done`
+      description: Summary verification result (`null` if state isn't `done`)
       properties:
         status:
-          description: the worst result from all services
+          description: The worst result from all services
           $ref: "#/components/schemas/VerificationStatus"
-
-        identifierComments:
+        verifierComments:
           type: array
-          description: Array of results all services (You can find full results in a servicesResults section)
+          description: Array of results from all services (You can find full results in a servicesResults section)
           items:
             type: object
             properties:
@@ -452,66 +422,76 @@ components:
 
         validationDate:
           type: string
-          description: Date of finish validation
+          description: The date of validation completion
           format: date-time
           example: "2020-03-17T20:28:37.061Z"
       additionalProperties: false
       required:
         - status
-        - identifierComments
+        - verifierComments
         - validationDate
     VerificationStatus:
       type: string
       description: |
-        result of verification
-        * `approved` - we didn't find problems
-        * `declined` - TODO
+        The result of verification:
+        * `approved` - no problems are found
+        * `declined` - application is declined due to some problems
         * `review-needed` - TODO
-        * `error` - service is finished with  error
+        * `error` - error was occured
       enum:
         - declined
         - approved
         - review-needed
         - error
-    ProcessStatus:
+    ProcessingState:
       type: string
       enum:
         - done
         - processing
-        - review-needed
+        - manual-checking
+      description: |
+        Application processing state:
+          * `done` - processing is finished
+          * `processing` - application is still being processed
+          * `manual-checking` - application is being manually checked
+
     SourceMetadata:
-      nullable: true
       type: object
       description: |
-        The meta information about source of the input data.
-        You can use that field to send the custom meta information between request and response.
-        We are going to add this data into response object as is.
-        Max count of fields is 30
+        The meta information about the source of the input data.
+        This field can be used to add custom meta information.
+        It's also will be added to the response as is.
+
+        Max number of properties is 30
       maxProperties: 30
       properties:
+        customerId:
+          type: string
+          description: Use this field to set custom ID from your system
+          example: ID-342
         platform:
           type: string
-          description: The version of os where was created an application
+          description: The platform type the application is sent from
           example:
             - android
             - ios
             - web
-        appName:
+        clientName:
           type: string
-          description: The name of application which is doing request
+          description: The name of the client which sent the request
           example: my-api-client
-        appVersion:
+        clientVersion:
           type: string
-          description: The version of application which is doing request
+          description: The version of the client which sent the request
           example: 1.0.0
         locale:
           type: string
-          description: The locale of application which is doing request
+          description: The locale of the client which sent the request
           format: locale
           example: en_US
       additionalProperties:
         x-additionalPropertiesName: x-
-        description: You can add custom headers with prefix `x-`
+        description: Custom properties can be added with prefix `x-`
         type: string
       example:
         platform: android
@@ -554,7 +534,7 @@ components:
       nullable: true
     FaceMatching:
       type: object
-      description: Service of face-matching. Service try check user on document and selfie
+      description: Face-matching service compares photo on the document with selfie
       properties:
         comment:
           description: Short comment for result
@@ -564,13 +544,13 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/VerificationStatus"
-        processStatus:
-          $ref: "#/components/schemas/ProcessStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
         results:
           $ref: "#/components/schemas/FaceMatchingResult"
         settings:
           type: object
-          description: settings for determining the status
+          description: settings determining the resulting status
           properties:
             declineMaxScore:
               description: level to which a decision will be made about `declined` status
@@ -594,15 +574,15 @@ components:
       additionalProperties: false
     FaceMatchingResult:
       type: object
-      description: Results of face matching service
+      description: Result of face matching service
       properties:
         files:
-          description: list of id files which was involved in checking (from selfie and documents)
+          description: list of file ids which were involved in checking (from selfie and documents)
           type: array
           items:
             type: string
         score:
-          description: score of similar faces
+          description: faces similarity score
           type: number
           example: 0.3
       required:
@@ -612,18 +592,18 @@ components:
     Liveness:
       type: object
       properties:
-        identifierComment:
+        verifierComment:
           type: string
         verifier:
           type: string
         status:
           $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
         results:
           type: array
           items:
             $ref: "#/components/schemas/LivenessResult"
-        processStatus:
-          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -638,24 +618,23 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
         extracted:
-          ocr:
-            nullable: true
-            type: array
-            items:
-              $ref: "#/components/schemas/DataExtractionResult"
-          mrz:
-            nullable: true
-            type: array
-            items:
-              $ref: "#/components/schemas/DataExtractionResult"
-          nfc:
-            nullable: true
-            type: array
-            items:
-              $ref: "#/components/schemas/DataExtractionResult"
-        processStatus:
-          $ref: "#/components/schemas/ProcessStatus"
+          type: object
+          properties:
+            ocr:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataExtractionResult"
+            mrz:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataExtractionResult"
+            nfc:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataExtractionResult"
       required:
         - status
       additionalProperties: false
@@ -693,8 +672,10 @@ components:
           $ref: "#/components/schemas/ContentType"
         category:
           type: string
+          description: The name of the extracted field
         content:
           type: string
+          description: The value of the extracted field
       required:
         - contentType
         - category
@@ -704,18 +685,18 @@ components:
     CrossChecking:
       type: object
       properties:
-        identifierComment:
+        verifierComment:
           type: string
         verifier:
           type: string
         status:
           $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
         results:
           type: array
           items:
             $ref: "#/components/schemas/CrossCheckingResult"
-        processStatus:
-          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -740,18 +721,18 @@ components:
     Watchlists:
       type: object
       properties:
-        identifierComment:
+        verifierComment:
           type: string
         verifier:
           type: string
         status:
           $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
         results:
           type: array
           items:
             $ref: "#/components/schemas/WatchlistsResult"
-        processStatus:
-          $ref: "#/components/schemas/ProcessStatus"
       required:
         - status
       additionalProperties: false
@@ -780,24 +761,23 @@ components:
         - boolean
 
     VerificationTypes:
-      nullable: true
       type: array
       description: |
-        It's list of verification which you want to do:
-        * watchlists - It's check user on PEPs. You should fill fields (first name, last name)
-        * face-matching - We will try check photo on document and selfie. You should fill selfie list and document list
-        * extract-data - We will try extract data from documents. You should fill documents
-        * crosschecking - You send information about user and we will check a conformity between it and extracted data
-        If you don't send this field we do all verification what we can. You can fill documents and fields
+        List of requested verifications:
+        * watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)
+        * face-matching - compare photo on the document with selfie (selfie list and document list must be provided)
+        * extract-data - extract data from the documents (documents must be provided)
+        * crosschecking - check the conformity between fields and extracted data
+
+        If the list isn't provided, all verifications will be applied.
       items:
-        nullable: true
         type: string
         enum: ["watchlists", "face-matching", "extract-data", "crosschecking"]
       example: ["watchlists", "face-matching", "extract-data"]
 
     DocumentType:
       type: string
-      description: kind of document
+      description: Kind of the document
       enum:
         - passport
         - id-card
