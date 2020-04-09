@@ -1,185 +1,112 @@
 {
-    "openapi": "3.0.0",
-    "servers": [
-      {
-        "url": "https://spxon.getid.dev/",
-        "description": "Production server"
-      },
-      {
-        "url": "https://spxon.sb.getid.dev/",
-        "description": "Sandbox server"
-      }
-    ],
-    "info": {
-      "title": "Enveloped Application",
-      "version": "2.0",
-      "x-logo": {
-        "url": "./logo.svg",
-        "altText": "GetID"
-      },
-      "description": "\n# API\nInformation about API\n\n# SDK\nInformation about API\n"
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://spxon.getid.dev/",
+      "description": "Production server"
     },
-    "paths": {
-      "/api/v1/application": {
-        "post": {
-          "security": [
-            {
-              "ApiKeyAuth": []
+    {
+      "url": "https://spxon.sb.getid.dev/",
+      "description": "Sandbox server"
+    }
+  ],
+  "info": {
+    "title": "Enveloped Application",
+    "version": "2.0",
+    "x-logo": {
+      "url": "./logo.svg",
+      "altText": "GetID"
+    },
+    "description": "\n# API\nInformation about API\n\n# SDK\nInformation about API\n"
+  },
+  "paths": {
+    "/api/v1/application": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Send application for verification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvelopedApplication"
+              }
             }
-          ],
-          "description": "Send application for verification",
-          "requestBody": {
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvelopedApplication"
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        200
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "format": "ObjectId",
+                      "example": "5e62110968e3fb4d655756d1"
+                    }
+                  }
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "OK",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          200
-                        ]
-                      },
-                      "id": {
-                        "type": "string",
-                        "format": "ObjectId",
-                        "example": "5e62110968e3fb4d655756d1"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "Empty request body",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          400
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "Missing or wrong authorization headers",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          401
-                        ]
-                      },
-                      "errorMessage": {
-                        "type": "string",
-                        "example": "Unauthorized"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "402": {
-              "description": "Wrong format or missing data",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          402
-                        ]
+          "400": {
+            "description": "Invalind request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
                       }
                     }
                   }
                 }
               }
             }
-          }
-        }
-      },
-      "/api/v1/application/{id}": {
-        "get": {
-          "security": [
-            {
-              "ApiKeyAuth": []
-            }
-          ],
-          "description": "Get verified application",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "id",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "OK",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/VerificationResult"
-                  }
-                }
+          },
+          "401": {
+            "description": "Missing or wrong authorization headers",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "Authentication method that should be used to gain access to a resource",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "apiKey realm=\"Access to API\""
               }
             },
-            "401": {
-              "description": "Missing or wrong authorization headers",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          401
-                        ]
-                      },
-                      "errorMessage": {
-                        "type": "string",
-                        "example": "Unauthorized"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "402": {
-              "description": "Application not found",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "properties": {
-                      "responseCode": {
-                        "type": "integer",
-                        "enum": [
-                          402
-                        ]
-                      }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Unauthorized"
                     }
                   }
                 }
@@ -189,148 +116,212 @@
         }
       }
     },
-    "components": {
-      "securitySchemes": {
-        "ApiKeyAuth": {
-          "type": "apiKey",
-          "in": "header",
-          "name": "X-API-Key",
-          "description": "You can find token on settings page.\nIt's required for all API methods.\n"
-        }
-      },
-      "schemas": {
-        "EnvelopedApplication": {
-          "type": "object",
-          "properties": {
-            "metadata": {
-              "$ref": "#/components/schemas/SourceMetadata"
-            },
-            "application": {
-              "$ref": "#/components/schemas/Application"
-            },
-            "verificationTypes": {
-              "$ref": "#/components/schemas/VerificationTypes"
+    "/api/v1/application/{id}": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Get verified application",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        },
-        "VerificationResult": {
-          "type": "object",
-          "properties": {
-            "responseCode": {
-              "type": "integer",
-              "description": "contains HTTP code (200)",
-              "enum": [
-                200
-              ]
-            },
-            "id": {
-              "type": "string",
-              "description": "Application id",
-              "format": "ObjectId",
-              "example": "5e62110968e3fb4d655756d1"
-            },
-            "metadata": {
-              "$ref": "#/components/schemas/ResultMetadata"
-            },
-            "application": {
-              "$ref": "#/components/schemas/Application"
-            },
-            "verificationTypes": {
-              "$ref": "#/components/schemas/VerificationTypes"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "overallResult": {
-              "$ref": "#/components/schemas/OverallResult"
-            },
-            "servicesResults": {
-              "$ref": "#/components/schemas/ServiceResults"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResult"
+                }
+              }
             }
           },
-          "required": [
-            "id",
-            "responseCode",
-            "metadata",
-            "application",
-            "processingState"
-          ]
-        },
-        "Application": {
-          "type": "object",
-          "description": "The data to verify",
-          "properties": {
-            "fields": {
-              "type": "array",
-              "description": "Data fields to check.\n\nFor example: Last Name and Date of Birth sent from web form\n",
-              "items": {
-                "$ref": "#/components/schemas/Field"
-              },
-              "example": [
-                {
-                  "contentType": "string",
-                  "content": "First Name",
-                  "category": "Artem",
-                  "requireCheck": true
+          "401": {
+            "description": "Missing or wrong authorization headers",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "Authentication method that should be used to gain access to a resource",
+                "schema": {
+                  "type": "string"
                 },
-                {
-                  "contentType": "string",
-                  "content": "Last Name",
-                  "category": "Gerus",
-                  "requireCheck": true
-                },
-                {
-                  "contentType": "sex",
-                  "content": "male",
-                  "category": "sex"
-                },
-                {
-                  "contentType": "bool",
-                  "content": "true",
-                  "category": "Agree on something"
-                }
-              ]
-            },
-            "documents": {
-              "type": "array",
-              "description": "Documents for data extraction or cross-checking",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "issuingCountry": {
-                    "type": "string",
-                    "description": "Country code of country of issue https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2",
-                    "pattern": "^[a-zA-Z]{2}$",
-                    "examples": [
-                      "UK",
-                      "GB",
-                      "DE"
-                    ]
-                  },
-                  "documentType": {
-                    "$ref": "#/components/schemas/DocumentType"
-                  },
-                  "files": {
-                    "description": "Document photos or scans",
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/DocumentMedia"
-                    }
-                  }
-                },
-                "required": [
-                  "files"
-                ]
+                "example": "apiKey realm=\"Access to API\""
               }
             },
-            "selfie": {
-              "description": "Information for `face-matching` or `liveness`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Application not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        404
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "You can find token on settings page.\nIt's required for all API methods.\n"
+      }
+    },
+    "schemas": {
+      "EnvelopedApplication": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          },
+          "application": {
+            "$ref": "#/components/schemas/Application"
+          },
+          "verificationTypes": {
+            "$ref": "#/components/schemas/VerificationTypes"
+          }
+        }
+      },
+      "VerificationResult": {
+        "type": "object",
+        "properties": {
+          "responseCode": {
+            "type": "integer",
+            "description": "contains HTTP code (200)",
+            "enum": [
+              200
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Application id",
+            "format": "ObjectId",
+            "example": "5e62110968e3fb4d655756d1"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ResultMetadata"
+          },
+          "application": {
+            "$ref": "#/components/schemas/Application"
+          },
+          "verificationTypes": {
+            "$ref": "#/components/schemas/VerificationTypes"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "overallResult": {
+            "$ref": "#/components/schemas/OverallResult"
+          },
+          "servicesResults": {
+            "$ref": "#/components/schemas/ServiceResults"
+          }
+        },
+        "required": [
+          "id",
+          "responseCode",
+          "metadata",
+          "application",
+          "processingState"
+        ]
+      },
+      "Application": {
+        "type": "object",
+        "description": "The data to verify",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "description": "Data fields to check.\n\nFor example: Last Name and Date of Birth sent from web form\n",
+            "items": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "example": [
+              {
+                "contentType": "string",
+                "content": "First Name",
+                "category": "Artem",
+                "requireCheck": true
+              },
+              {
+                "contentType": "string",
+                "content": "Last Name",
+                "category": "Gerus",
+                "requireCheck": true
+              },
+              {
+                "contentType": "sex",
+                "content": "male",
+                "category": "sex"
+              },
+              {
+                "contentType": "bool",
+                "content": "true",
+                "category": "Agree on something"
+              }
+            ]
+          },
+          "documents": {
+            "type": "array",
+            "description": "Documents for data extraction or cross-checking",
+            "items": {
+              "type": "object",
               "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "document id (filled automatically when missing)"
+                },
+                "issuingCountry": {
+                  "type": "string",
+                  "description": "The code of the country of issue\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
+                  "pattern": "^[a-zA-Z]{2,3}$",
+                  "example": "JPN"
+                },
+                "documentType": {
+                  "$ref": "#/components/schemas/DocumentType"
+                },
                 "files": {
+                  "description": "Document photos or scans",
                   "type": "array",
-                  "description": "list of selfies for face-matching",
                   "items": {
-                    "$ref": "#/components/schemas/FacesMedia"
+                    "$ref": "#/components/schemas/DocumentMedia"
                   }
                 }
               },
@@ -338,540 +329,491 @@
                 "files"
               ]
             }
-          }
-        },
-        "Field": {
-          "type": "object",
-          "oneOf": [
-            {
-              "$ref": "#/components/schemas/StringField"
-            },
-            {
-              "$ref": "#/components/schemas/DateField"
-            },
-            {
-              "$ref": "#/components/schemas/SexField"
-            },
-            {
-              "$ref": "#/components/schemas/BoolField"
-            },
-            {
-              "$ref": "#/components/schemas/CountryField"
-            },
-            {
-              "$ref": "#/components/schemas/NumberField"
-            }
-          ]
-        },
-        "FieldBase": {
-          "type": "object",
-          "properties": {
-            "category": {
-              "type": "string",
-              "description": "Kind of data.\n\nFor example: First Name, Date of Birth...\n",
-              "examples": [
-                "First Name",
-                "Date of Birth"
-              ]
-            }
-          }
-        },
-        "StringField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "string"
-                  ]
-                },
-                "content": {
-                  "type": "string",
-                  "description": "String value"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "DateField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "date"
-                  ]
-                },
-                "content": {
-                  "format": "date",
-                  "type": "string",
-                  "description": "The value with date"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "SexField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "sex"
-                  ]
-                },
-                "content": {
-                  "enum": [
-                    "male",
-                    "female"
-                  ],
-                  "type": "string",
-                  "description": "male or female"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "NumberField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "number"
-                  ]
-                },
-                "content": {
-                  "format": "number",
-                  "type": "string",
-                  "description": "The number value"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "CountryField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "country"
-                  ]
-                },
-                "content": {
-                  "type": "string",
-                  "description": "The country code https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2",
-                  "pattern": "^[a-zA-Z]{2}$",
-                  "examples": [
-                    "UK",
-                    "GB",
-                    "DE"
-                  ]
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "BoolField": {
-          "type": "object",
-          "allOf": [
-            {
-              "type": "object",
-              "properties": {
-                "contentType": {
-                  "type": "string",
-                  "enum": [
-                    "bool"
-                  ]
-                },
-                "content": {
-                  "enum": [
-                    "true",
-                    "false"
-                  ],
-                  "type": "string",
-                  "example": "true",
-                  "description": "The bool value"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/FieldBase"
-            }
-          ],
-          "required": [
-            "content",
-            "category",
-            "contentType"
-          ]
-        },
-        "FacesMedia": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "file id (filled automatically when missing)"
-            },
-            "url": {
-              "description": "URL address of downloadable image or Data URI",
-              "type": "string",
-              "examples": [
-                "data:image/png;base64,R0lGODlhDAAMAK...",
-                "https://example.com/image.jpg"
-              ]
-            }
           },
-          "required": [
-            "url"
-          ]
-        },
-        "DocumentMedia": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "file id (filled automatically when missing)"
-            },
-            "kind": {
-              "type": "string",
-              "description": "kind of document page",
-              "enum": [
-                "front",
-                "back",
-                "page"
-              ],
-              "example": "front"
-            },
-            "url": {
-              "description": "URL address of downloadable image or Data URI",
-              "type": "string",
-              "examples": [
-                "data:image/png;base64,R0lGODlhDAAMAK...",
-                "https://example.com/image.jpg"
-              ]
-            }
-          },
-          "required": [
-            "url",
-            "kind"
-          ]
-        },
-        "Extensions": {
-          "type": "array",
-          "items": {
-            "type": "object",
+          "selfie": {
+            "description": "Media required for `face-matching`",
             "properties": {
-              "extension": {
-                "type": "string",
-                "example": "my extension"
-              },
-              "extensionData": {
-                "type": "string",
-                "description": "contains substructure in JSON"
+              "files": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FacesMedia"
+                }
               }
             },
             "required": [
-              "extension",
-              "extensionData"
+              "files"
+            ]
+          }
+        }
+      },
+      "Field": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/StringField"
+          },
+          {
+            "$ref": "#/components/schemas/DateField"
+          },
+          {
+            "$ref": "#/components/schemas/SexField"
+          },
+          {
+            "$ref": "#/components/schemas/BoolField"
+          },
+          {
+            "$ref": "#/components/schemas/CountryField"
+          },
+          {
+            "$ref": "#/components/schemas/NumberField"
+          }
+        ]
+      },
+      "StringField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "string"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Kind of data.\n\nFor example: First name, Surname\n",
+            "example": "First name"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The string value",
+            "example": "John"
+          }
+        },
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "DateField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "date"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Kind of data.\n\nFor example: Date of Birth\n",
+            "example": "Date of Birth"
+          },
+          "content": {
+            "format": "date",
+            "type": "string",
+            "description": "Acceptable orders of day, month and year: DMY or YMD\n\nFor example: 06.12.1996, 3/4/2007, 1960-24-02\n",
+            "example": "06.12.1996"
+          }
+        },
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "SexField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "sex"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Sex"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female"
             ]
           }
         },
-        "OverallResult": {
-          "nullable": true,
-          "type": "object",
-          "description": "Summary verification result (`null` if state isn't `done`)",
-          "properties": {
-            "status": {
-              "description": "The worst result from all services",
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "verifierComments": {
-              "type": "array",
-              "description": "Array of results from all services (You can find full results in a servicesResults section)",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "service": {
-                    "description": "Service name",
-                    "type": "string"
-                  },
-                  "text": {
-                    "description": "Short comment for result",
-                    "type": "string"
-                  },
-                  "status": {
-                    "$ref": "#/components/schemas/VerificationStatus"
-                  }
-                }
-              },
-              "example": [
-                {
-                  "service": "face-matching",
-                  "text": "faces are similar",
-                  "status": "approved"
-                },
-                {
-                  "service": "watchlists",
-                  "text": "found 2 reports against the person",
-                  "status": "declined"
-                },
-                {
-                  "service": "extract-data",
-                  "text": "data was extracted",
-                  "status": "approved"
-                }
-              ]
-            },
-            "validationDate": {
-              "type": "string",
-              "description": "The date of validation completion",
-              "format": "date-time",
-              "example": "2020-03-17T20:28:37.061Z"
-            }
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "NumberField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "number"
+            ]
           },
-          "additionalProperties": false,
-          "required": [
-            "status",
-            "verifierComments",
-            "validationDate"
-          ]
-        },
-        "VerificationStatus": {
-          "type": "string",
-          "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to some problems\n* `review-needed` - TODO\n* `error` - error was occured\n",
-          "enum": [
-            "declined",
-            "approved",
-            "review-needed",
-            "error"
-          ]
-        },
-        "ProcessingState": {
-          "type": "string",
-          "enum": [
-            "done",
-            "processing",
-            "manual-checking"
-          ],
-          "description": "Application processing state:\n  * `done` - processing is finished\n  * `processing` - application is still being processed\n  * `manual-checking` - application is being manually checked\n"
-        },
-        "SourceMetadata": {
-          "type": "object",
-          "description": "The meta information about the source of the input data.\nThis field can be used to add custom meta information.\nIt's also will be added to the response as is.\n\nMax number of properties is 30\n",
-          "maxProperties": 30,
-          "properties": {
-            "customerId": {
-              "type": "string",
-              "description": "Use this field to set custom ID from your system",
-              "example": "ID-342"
-            },
-            "platform": {
-              "type": "string",
-              "description": "The platform type the application is sent from",
-              "example": [
-                "android",
-                "ios",
-                "web"
-              ]
-            },
-            "clientName": {
-              "type": "string",
-              "description": "The name of the client which sent the request",
-              "example": "my-api-client"
-            },
-            "clientVersion": {
-              "type": "string",
-              "description": "The version of the client which sent the request",
-              "example": "1.0.0"
-            },
-            "locale": {
-              "type": "string",
-              "description": "The locale of the client which sent the request",
-              "format": "locale",
-              "example": "en_US"
-            }
+          "category": {
+            "type": "string",
+            "description": "Kind of data."
           },
-          "additionalProperties": {
-            "x-additionalPropertiesName": "x-",
-            "description": "Custom properties can be added with prefix `x-`",
-            "type": "string"
-          },
-          "example": {
-            "platform": "android",
-            "locale": "en_US",
-            "appName": "my-api-client",
-            "appVersion": "1.0.0",
-            "x-my-custom-meta-name-1": "custom-value-1",
-            "x-my-custom-meta-name-2": "custom-value-2"
+          "content": {
+            "type": "string",
+            "format": "number",
+            "description": "The number value"
           }
         },
-        "ResultMetadata": {
-          "allOf": [
-            {
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "CountryField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "country"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Kind of data.\n\nFor example: Country of Birth\n"
+          },
+          "content": {
+            "type": "string",
+            "description": "The country code\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
+            "pattern": "^[a-zA-Z]{2,3}$",
+            "example": "JPN"
+          }
+        },
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "BoolField": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "bool"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Kind of data."
+          },
+          "content": {
+            "enum": [
+              "true",
+              "false"
+            ],
+            "type": "string",
+            "description": "The bool value",
+            "example": "true"
+          }
+        },
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ]
+      },
+      "FacesMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
+          "uri": {
+            "description": "Data URI of the media\n\nAll common image formats are acceptable.\n\nAcceptable video formats: WebM + VP8, MP4 + AVC\n",
+            "type": "string",
+            "example": "data:video/webm;base64,<data>"
+          }
+        },
+        "required": [
+          "uri"
+        ]
+      },
+      "DocumentMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
+          "kind": {
+            "type": "string",
+            "description": "kind of document page",
+            "enum": [
+              "front",
+              "back",
+              "page"
+            ],
+            "example": "front"
+          },
+          "uri": {
+            "description": "Data URI of the media",
+            "type": "string",
+            "example": "data:image/png;base64,R0lGODlhDAAMAK..."
+          }
+        },
+        "required": [
+          "uri",
+          "kind"
+        ]
+      },
+      "OverallResult": {
+        "nullable": true,
+        "type": "object",
+        "description": "Summary verification result (`null` if state isn't `done`)",
+        "properties": {
+          "status": {
+            "description": "The worst result from all services",
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "comments": {
+            "type": "array",
+            "description": "Array of results from all services (You can find full results in a servicesResults section)",
+            "items": {
               "type": "object",
               "properties": {
-                "ip": {
-                  "type": "string",
-                  "description": "IP from which the request was sent",
-                  "format": "ip",
-                  "example": "8.8.8.8"
+                "service": {
+                  "description": "Service name",
+                  "type": "string"
                 },
-                "createdAt": {
-                  "description": "time when the application was created",
-                  "type": "string",
-                  "format": "date-time",
-                  "example": "2020-03-17T20:28:37.061Z"
-                }
-              }
-            },
-            {
-              "$ref": "#/components/schemas/SourceMetadata"
-            }
-          ],
-          "nullable": false
-        },
-        "ServiceResults": {
-          "type": "object",
-          "properties": {
-            "faceMatching": {
-              "$ref": "#/components/schemas/FaceMatching"
-            },
-            "dataExtraction": {
-              "$ref": "#/components/schemas/DataExtraction"
-            },
-            "crossChecking": {
-              "$ref": "#/components/schemas/CrossChecking"
-            },
-            "watchlists": {
-              "$ref": "#/components/schemas/Watchlists"
-            }
-          },
-          "additionalProperties": false,
-          "nullable": true
-        },
-        "FaceMatching": {
-          "type": "object",
-          "description": "Face-matching service compares photo on the document with selfie",
-          "properties": {
-            "comment": {
-              "description": "Short comment for result",
-              "type": "string"
-            },
-            "verifier": {
-              "description": "Name of verifier",
-              "type": "string"
-            },
-            "status": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "results": {
-              "$ref": "#/components/schemas/FaceMatchingResult"
-            },
-            "settings": {
-              "type": "object",
-              "description": "settings determining the resulting status",
-              "properties": {
-                "declineMaxScore": {
-                  "description": "level to which a decision will be made about `declined` status",
-                  "type": "number",
-                  "example": 0.4
+                "status": {
+                  "$ref": "#/components/schemas/VerificationStatus"
                 },
-                "approveMinScore": {
-                  "description": "level from which a decision will be made about `approve` status",
-                  "type": "number",
-                  "example": 0.6
+                "comment": {
+                  "description": "Short comment about the result",
+                  "type": "string"
                 }
-              }
-            }
-          },
-          "required": [
-            "status"
-          ],
-          "examples": [
-            {
-              "status": "approved",
-              "verifier": "SphereX",
-              "comment": "Faces are similar",
-              "settings": {
-                "declineMaxScore": 0.4,
-                "approveMinScore": 0.6
               },
-              "results": {
-                "score": 0.7
+              "required": [
+                "service",
+                "status"
+              ]
+            },
+            "example": [
+              {
+                "service": "face-matching",
+                "status": "approved",
+                "comment": "faces are similar"
+              },
+              {
+                "service": "watchlists",
+                "status": "declined",
+                "comment": "found 2 reports against the person"
+              },
+              {
+                "service": "extract-data",
+                "status": "approved",
+                "comment": "data was extracted"
+              }
+            ]
+          },
+          "validationDate": {
+            "type": "string",
+            "description": "The date of validation completion",
+            "format": "date-time",
+            "example": "2020-03-17T20:28:37.061Z"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "comments",
+          "validationDate"
+        ]
+      },
+      "VerificationStatus": {
+        "type": "string",
+        "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to some problems\n* `needs-review` - TODO\n* `error` - error was occured\n",
+        "enum": [
+          "declined",
+          "approved",
+          "needs-review",
+          "error"
+        ]
+      },
+      "ProcessingState": {
+        "type": "string",
+        "enum": [
+          "done",
+          "processing"
+        ],
+        "description": "Application processing state:\n  * `done` - processing is finished\n  * `processing` - application is being processed\n"
+      },
+      "SourceMetadata": {
+        "type": "object",
+        "description": "The meta information about the source of the input data.\nThis field can be used to add custom meta information.\nIt's also will be added to the response as is.\n",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "description": "Use this field to set custom ID from your system",
+            "example": "ID-342"
+          },
+          "platform": {
+            "type": "string",
+            "description": "The platform type the application is sent from",
+            "example": [
+              "android",
+              "ios",
+              "web"
+            ]
+          },
+          "clientName": {
+            "type": "string",
+            "description": "The name of the client which sent the request",
+            "example": "my-api-client"
+          },
+          "clientVersion": {
+            "type": "string",
+            "description": "The version of the client which sent the request",
+            "example": "1.0.0"
+          },
+          "labels": {
+            "type": "object",
+            "description": "Custom key-value labels (maximum 30)",
+            "maxProperties": 30,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "example": {
+          "externalId": "ID-2345",
+          "platform": "android",
+          "clientName": "my-api-client",
+          "clientVersion": "1.0.0",
+          "labels": {
+            "my-custom-meta-name-1": "custom-value-1",
+            "my-custom-meta-name-2": "custom-value-2"
+          }
+        }
+      },
+      "ResultMetadata": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "ip": {
+                "type": "string",
+                "description": "IP from which the request was sent",
+                "format": "ipv4",
+                "example": "8.8.8.8"
+              },
+              "createdAt": {
+                "description": "time when the application was created",
+                "type": "string",
+                "format": "date-time",
+                "example": "2020-03-17T20:28:37.061Z"
               }
             }
-          ],
-          "additionalProperties": false
+          },
+          {
+            "$ref": "#/components/schemas/SourceMetadata"
+          }
+        ],
+        "nullable": false
+      },
+      "ServiceResults": {
+        "type": "object",
+        "properties": {
+          "faceMatching": {
+            "$ref": "#/components/schemas/FaceMatching"
+          },
+          "dataExtraction": {
+            "$ref": "#/components/schemas/DataExtraction"
+          },
+          "crossChecking": {
+            "$ref": "#/components/schemas/CrossChecking"
+          },
+          "watchlists": {
+            "$ref": "#/components/schemas/Watchlists"
+          }
         },
-        "FaceMatchingResult": {
-          "type": "object",
-          "description": "Result of face matching service",
+        "additionalProperties": false
+      },
+      "FaceMatching": {
+        "type": "object",
+        "description": "Face-matching service compares photo on the document with selfie",
+        "properties": {
+          "comment": {
+            "description": "Short comment about the result",
+            "type": "string",
+            "example": "Faces are not similar"
+          },
+          "verifier": {
+            "description": "Name of the verifier",
+            "type": "string",
+            "example": "Facemelter"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "results": {
+            "$ref": "#/components/schemas/FaceMatchingResult"
+          },
+          "settings": {
+            "type": "object",
+            "description": "Settings determining result status.\n\nIf both threshold are equal, result status can only be `declined` or `approved`\n",
+            "properties": {
+              "declineThreshold": {
+                "description": "threshold between `declined` and `needs-review` status",
+                "type": "number",
+                "example": 0.4
+              },
+              "needsReviewThreshold": {
+                "description": "threshold between `needs-review` and `approved` status",
+                "type": "number",
+                "example": 0.6
+              }
+            }
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "FaceMatchingResult": {
+        "type": "array",
+        "description": "Result of face matching service",
+        "items": {
           "properties": {
             "files": {
-              "description": "list of file ids which were involved in checking (from selfie and documents)",
+              "description": "two file ids which were involved in checking",
               "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
               "items": {
                 "type": "string"
-              }
+              },
+              "example": [
+                "face-abc1",
+                "document-photo-qwe7"
+              ]
             },
             "score": {
               "description": "faces similarity score",
@@ -884,55 +826,62 @@
             "files"
           ],
           "additionalProperties": false
-        },
-        "Liveness": {
-          "type": "object",
-          "properties": {
-            "verifierComment": {
-              "type": "string"
-            },
-            "verifier": {
-              "type": "string"
-            },
-            "status": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "results": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/LivenessResult"
-              }
-            }
+        }
+      },
+      "Liveness": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
           },
-          "required": [
-            "status"
-          ],
-          "additionalProperties": false
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LivenessResult"
+            }
+          }
         },
-        "LivenessResult": {
-          "type": "object"
-        },
-        "DataExtraction": {
-          "type": "object",
-          "properties": {
-            "comment": {
-              "type": "string"
-            },
-            "verifier": {
-              "type": "string"
-            },
-            "status": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "extracted": {
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "LivenessResult": {
+        "type": "object"
+      },
+      "DataExtraction": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "extracted": {
+            "type": "array",
+            "items": {
               "type": "object",
               "properties": {
+                "documentId": {
+                  "type": "string",
+                  "description": "ID of the document which data was extracted"
+                },
                 "ocr": {
                   "type": "array",
                   "items": {
@@ -951,18 +900,22 @@
                     "$ref": "#/components/schemas/DataExtractionResult"
                   }
                 }
-              }
+              },
+              "additionalProperties": false
             }
-          },
-          "required": [
-            "status"
-          ],
-          "additionalProperties": false,
-          "example": {
-            "comment": "Data was extracted",
-            "verifier": "Regula",
-            "status": "approved",
-            "extracted": {
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "comment": "Data was extracted",
+          "verifier": "Regula",
+          "status": "approved",
+          "extracted": [
+            {
+              "documentId": "passport-1",
               "ocr": [
                 {
                   "contentType": "string",
@@ -1005,180 +958,224 @@
                   "content": "Black"
                 }
               ]
+            },
+            {
+              "documentId": "driving-licence-1",
+              "ocr": [
+                {
+                  "contentType": "string",
+                  "category": "First name",
+                  "content": "Joe"
+                },
+                {
+                  "contentType": "string",
+                  "category": "Address",
+                  "content": "May street"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "DataExtractionResult": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "$ref": "#/components/schemas/ContentType"
+          },
+          "category": {
+            "type": "string",
+            "description": "The name of the extracted field"
+          },
+          "content": {
+            "type": "string",
+            "description": "The value of the extracted field"
+          },
+          "locale": {
+            "type": "string",
+            "description": "The locale of the extracted value",
+            "example": "en_UK"
+          }
+        },
+        "required": [
+          "contentType",
+          "category",
+          "content"
+        ],
+        "additionalProperties": false
+      },
+      "CrossChecking": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "fieldChecking": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldChecking"
+            },
+            "description": "Contains the list of checked fields\n\nIf the value corresponding to the field wasn't extracted, such case also would be added to the list\n",
+            "example": [
+              {
+                "category": "First name",
+                "field": "John",
+                "extracted": "Joanna",
+                "equal": false,
+                "documentId": "passport-1"
+              },
+              {
+                "category": "Surname",
+                "field": "Doe",
+                "extracted": "",
+                "equal": false,
+                "documentId": "passport-1"
+              },
+              {
+                "category": "Date of Birth",
+                "field": "1999-09-09",
+                "extracted": "1999-09-09",
+                "equal": true,
+                "documentId": "passport-1"
+              },
+              {
+                "category": "Address",
+                "field": "May street",
+                "extracted": "April street",
+                "equal": false,
+                "documentId": "driving-licence-1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "FieldChecking": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "example": "First name"
+          },
+          "field": {
+            "type": "string",
+            "example": "John"
+          },
+          "extracted": {
+            "type": "string",
+            "example": "Joanna"
+          },
+          "equal": {
+            "type": "boolean"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "ID of the document which extracted data is compared"
+          }
+        },
+        "required": [
+          "category",
+          "field",
+          "extracted",
+          "equal"
+        ],
+        "additionalProperties": false
+      },
+      "Watchlists": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "sentFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields which were sent to watchlists service",
+            "example": [
+              "First name",
+              "Last name",
+              "Date of Birth"
+            ]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchlistsResult"
             }
           }
         },
-        "DataExtractionResult": {
-          "type": "object",
-          "properties": {
-            "contentType": {
-              "$ref": "#/components/schemas/ContentType"
-            },
-            "category": {
-              "type": "string",
-              "description": "The name of the extracted field"
-            },
-            "content": {
-              "type": "string",
-              "description": "The value of the extracted field"
-            },
-            "locale": {
-              "type": "string",
-              "description": "The locale of the extracted value",
-              "examples": [
-                "en_UK",
-                "en_AU",
-                "zh_CN",
-                "zh_SG"
-              ]
-            }
-          },
-          "required": [
-            "contentType",
-            "category",
-            "content"
-          ],
-          "additionalProperties": false
-        },
-        "CrossChecking": {
-          "type": "object",
-          "properties": {
-            "verifierComment": {
-              "type": "string"
-            },
-            "verifier": {
-              "type": "string"
-            },
-            "status": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "results": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/CrossCheckingResult"
-              }
-            }
-          },
-          "required": [
-            "status"
-          ],
-          "additionalProperties": false
-        },
-        "CrossCheckingResult": {
-          "type": "object",
-          "properties": {
-            "category": {
-              "type": "string",
-              "example": [
-                "First name",
-                "Last name",
-                "Date of Birth"
-              ]
-            },
-            "field": {
-              "type": "string"
-            },
-            "extracted": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "category",
-            "field",
-            "extracted"
-          ],
-          "additionalProperties": false
-        },
-        "Watchlists": {
-          "type": "object",
-          "properties": {
-            "verifierComment": {
-              "type": "string"
-            },
-            "verifier": {
-              "type": "string"
-            },
-            "status": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "processingState": {
-              "$ref": "#/components/schemas/ProcessingState"
-            },
-            "results": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/WatchlistsResult"
-              }
-            }
-          },
-          "required": [
-            "status"
-          ],
-          "additionalProperties": false
-        },
-        "WatchlistsResult": {
-          "type": "object",
-          "properties": {
-            "contentType": {
-              "$ref": "#/components/schemas/ContentType"
-            },
-            "category": {
-              "type": "string"
-            },
-            "content": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "contentType",
-            "category",
-            "content"
-          ],
-          "additionalProperties": false
-        },
-        "ContentType": {
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "WatchlistsResult": {
+        "type": "object",
+        "description": "Watchlists' result can be any data structure"
+      },
+      "ContentType": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "sex",
+          "date",
+          "country",
+          "boolean"
+        ]
+      },
+      "VerificationTypes": {
+        "type": "array",
+        "description": "List of requested verifications:\n* watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)\n* face-matching - compare photo on the document with selfie (selfie list and document list must be provided)\n* extract-data - extract data from the documents (documents must be provided)\n* crosschecking - check the conformity between fields and extracted data\n\nIf the list isn't provided, all verifications will be applied.\n",
+        "items": {
           "type": "string",
           "enum": [
-            "string",
-            "number",
-            "sex",
-            "date",
-            "country",
-            "boolean"
-          ]
-        },
-        "VerificationTypes": {
-          "type": "array",
-          "description": "List of requested verifications:\n* watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)\n* face-matching - compare photo on the document with selfie (selfie list and document list must be provided)\n* extract-data - extract data from the documents (documents must be provided)\n* crosschecking - check the conformity between fields and extracted data\n\nIf the list isn't provided, all verifications will be applied.\n",
-          "items": {
-            "type": "string",
-            "enum": [
-              "watchlists",
-              "face-matching",
-              "extract-data",
-              "crosschecking"
-            ]
-          },
-          "example": [
             "watchlists",
             "face-matching",
-            "extract-data"
+            "extract-data",
+            "crosschecking"
           ]
         },
-        "DocumentType": {
-          "type": "string",
-          "description": "Kind of the document",
-          "enum": [
-            "passport",
-            "id-card",
-            "driving-licence",
-            "residence-permit"
-          ],
-          "example": "id-card"
-        }
+        "example": [
+          "watchlists",
+          "face-matching",
+          "extract-data"
+        ]
+      },
+      "DocumentType": {
+        "type": "string",
+        "description": "Kind of the document",
+        "enum": [
+          "passport",
+          "id-card",
+          "driving-licence",
+          "residence-permit"
+        ],
+        "example": "id-card"
       }
     }
   }
+}

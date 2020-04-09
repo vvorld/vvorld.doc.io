@@ -45,7 +45,7 @@ paths:
                     format: ObjectId
                     example: 5e62110968e3fb4d655756d1
         "400":
-          description: Empty request body
+          description: Invalind request
           content:
             "application/json":
               schema:
@@ -53,8 +53,18 @@ paths:
                   responseCode:
                     type: integer
                     enum: [400]
+                  errors:
+                    type: array
+                    items:
+                      type: object
         "401":
           description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
           content:
             "application/json":
               schema:
@@ -65,15 +75,7 @@ paths:
                   errorMessage:
                     type: string
                     example: Unauthorized
-        "402":
-          description: Wrong format or missing data
-          content:
-            "application/json":
-              schema:
-                properties:
-                  responseCode:
-                    type: integer
-                    enum: [402]
+
   /api/v1/application/{id}:
     get:
       security:
@@ -92,9 +94,14 @@ paths:
             "application/json":
               schema:
                 $ref: "#/components/schemas/VerificationResult"
-
         "401":
           description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
           content:
             "application/json":
               schema:
@@ -105,7 +112,7 @@ paths:
                   errorMessage:
                     type: string
                     example: Unauthorized
-        "402":
+        "404":
           description: Application not found
           content:
             "application/json":
@@ -113,7 +120,7 @@ paths:
                 properties:
                   responseCode:
                     type: integer
-                    enum: [402]
+                    enum: [404]
 
 components:
   securitySchemes:
@@ -198,11 +205,17 @@ components:
           items:
             type: object
             properties:
+              id:
+                type: string
+                description: document id (filled automatically when missing)
               issuingCountry:
                 type: string
-                description: Country code of country of issue https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-                pattern: ^[a-zA-Z]{2}$
-                examples: [UK, GB, DE]
+                description: |
+                  The code of the country of issue
+                  ([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
+                  or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))
+                pattern: ^[a-zA-Z]{2,3}$
+                example: JPN
               documentType:
                 $ref: "#/components/schemas/DocumentType"
               files:
@@ -213,11 +226,10 @@ components:
             required:
               - files
         selfie:
-          description: Information for `face-matching` or `liveness`
+          description: Media required for `face-matching`
           properties:
             files:
               type: array
-              description: list of selfies for face-matching
               items:
                 $ref: "#/components/schemas/FacesMedia"
           required:
@@ -233,109 +245,117 @@ components:
         - $ref: "#/components/schemas/CountryField"
         - $ref: "#/components/schemas/NumberField"
 
-    FieldBase:
+    StringField:
       type: object
       properties:
+        contentType:
+          type: string
+          enum: [string]
         category:
           type: string
           description: |
             Kind of data.
 
-            For example: First Name, Date of Birth...
-          examples: [First Name, Date of Birth]
-
-    StringField:
-      type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [string]
-            content:
-              type: string
-              description: String value
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+            For example: First name, Surname
+          example: First name
+        content:
+          type: string
+          minLength: 1
+          description: The string value
+          example: John
+      required: [contentType, category, content]
 
     DateField:
       type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [date]
-            content:
-              format: date
-              type: string
-              description: The value with date
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+      properties:
+        contentType:
+          type: string
+          enum: [date]
+        category:
+          type: string
+          description: |
+            Kind of data.
+
+            For example: Date of Birth
+          example: Date of Birth
+        content:
+          format: date
+          type: string
+          description: |
+            Acceptable orders of day, month and year: DMY or YMD
+
+            For example: 06.12.1996, 3/4/2007, 1960-24-02
+          example: "06.12.1996"
+      required: [contentType, category, content]
 
     SexField:
       type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [sex]
-            content:
-              enum: [male, female]
-              type: string
-              description: male or female
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+      properties:
+        contentType:
+          type: string
+          enum: [sex]
+        category:
+          type: string
+          enum: [Sex]
+        content:
+          type: string
+          enum: [male, female]
+      required: [contentType, category, content]
 
     NumberField:
       type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [number]
-            content:
-              format: number
-              type: string
-              description: The number value
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+      properties:
+        contentType:
+          type: string
+          enum: [number]
+        category:
+          type: string
+          description: Kind of data.
+        content:
+          type: string
+          format: number
+          description: The number value
+      required: [contentType, category, content]
 
     CountryField:
       type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [country]
-            content:
-              type: string
-              description: The country code https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-              pattern: ^[a-zA-Z]{2}$
-              examples: [UK, GB, DE]
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+      properties:
+        contentType:
+          type: string
+          enum: [country]
+        category:
+          type: string
+          description: |
+            Kind of data.
+
+            For example: Country of Birth
+        content:
+          type: string
+          description: |
+            The country code
+            ([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
+            or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))
+          pattern: ^[a-zA-Z]{2,3}$
+          example: JPN
+      required: [contentType, category, content]
 
     BoolField:
       type: object
-      allOf:
-        - type: object
-          properties:
-            contentType:
-              type: string
-              enum: [bool]
-            content:
-              enum:
-                - "true"
-                - "false"
-              type: string
-              example: "true"
-              description: The bool value
-        - $ref: "#/components/schemas/FieldBase"
-      required: [content, category, contentType]
+      properties:
+        contentType:
+          type: string
+          enum: [bool]
+        category:
+          type: string
+          description: Kind of data.
+        content:
+          enum:
+            - "true"
+            - "false"
+          type: string
+          description: The bool value
+          example: "true"
+      required: [contentType, category, content]
 
     FacesMedia:
       type: object
@@ -343,13 +363,16 @@ components:
         id:
           type: string
           description: file id (filled automatically when missing)
-        url:
-          description: URL address of downloadable image or Data URI
+        uri:
+          description: |
+            Data URI of the media
+
+            All common image formats are acceptable.
+
+            Acceptable video formats: WebM + VP8, MP4 + AVC
           type: string
-          examples:
-            - data:image/png;base64,R0lGODlhDAAMAK...
-            - https://example.com/image.jpg
-      required: [url]
+          example: "data:video/webm;base64,<data>"
+      required: [uri]
 
     DocumentMedia:
       type: object
@@ -365,27 +388,11 @@ components:
             - back
             - page
           example: front
-        url:
-          description: URL address of downloadable image or Data URI
+        uri:
+          description: Data URI of the media
           type: string
-          examples:
-            - data:image/png;base64,R0lGODlhDAAMAK...
-            - https://example.com/image.jpg
-      required: [url, kind]
-
-    Extensions:
-      type: array
-      items:
-        type: object
-        properties:
-          extension:
-            type: string
-            example: my extension
-          extensionData:
-            type: string
-            # example: {substructure}
-            description: contains substructure in JSON
-        required: [extension, extensionData]
+          example: data:image/png;base64,R0lGODlhDAAMAK...
+      required: [uri, kind]
 
     OverallResult:
       nullable: true
@@ -395,7 +402,7 @@ components:
         status:
           description: The worst result from all services
           $ref: "#/components/schemas/VerificationStatus"
-        verifierComments:
+        comments:
           type: array
           description: Array of results from all services (You can find full results in a servicesResults section)
           items:
@@ -404,21 +411,24 @@ components:
               service:
                 description: Service name
                 type: string
-              text:
-                description: Short comment for result
-                type: string
               status:
                 $ref: "#/components/schemas/VerificationStatus"
+              comment:
+                description: Short comment about the result
+                type: string
+            required:
+              - service
+              - status
           example:
             - service: face-matching
-              text: faces are similar
               status: approved
+              comment: faces are similar
             - service: watchlists
-              text: "found 2 reports against the person"
               status: declined
+              comment: found 2 reports against the person
             - service: extract-data
-              text: data was extracted
               status: approved
+              comment: data was extracted
 
         validationDate:
           type: string
@@ -428,7 +438,7 @@ components:
       additionalProperties: false
       required:
         - status
-        - verifierComments
+        - comments
         - validationDate
     VerificationStatus:
       type: string
@@ -436,24 +446,22 @@ components:
         The result of verification:
         * `approved` - no problems are found
         * `declined` - application is declined due to some problems
-        * `review-needed` - TODO
+        * `needs-review` - TODO
         * `error` - error was occured
       enum:
         - declined
         - approved
-        - review-needed
+        - needs-review
         - error
     ProcessingState:
       type: string
       enum:
         - done
         - processing
-        - manual-checking
       description: |
         Application processing state:
           * `done` - processing is finished
-          * `processing` - application is still being processed
-          * `manual-checking` - application is being manually checked
+          * `processing` - application is being processed
 
     SourceMetadata:
       type: object
@@ -461,11 +469,8 @@ components:
         The meta information about the source of the input data.
         This field can be used to add custom meta information.
         It's also will be added to the response as is.
-
-        Max number of properties is 30
-      maxProperties: 30
       properties:
-        customerId:
+        externalId:
           type: string
           description: Use this field to set custom ID from your system
           example: ID-342
@@ -484,22 +489,21 @@ components:
           type: string
           description: The version of the client which sent the request
           example: 1.0.0
-        locale:
-          type: string
-          description: The locale of the client which sent the request
-          format: locale
-          example: en_US
-      additionalProperties:
-        x-additionalPropertiesName: x-
-        description: Custom properties can be added with prefix `x-`
-        type: string
+        labels:
+          type: object
+          description: Custom key-value labels (maximum 30)
+          maxProperties: 30
+          additionalProperties:
+            type: string
+      additionalProperties: false
       example:
+        externalId: ID-2345
         platform: android
-        locale: en_US
-        appName: my-api-client
-        appVersion: 1.0.0
-        x-my-custom-meta-name-1: custom-value-1
-        x-my-custom-meta-name-2: custom-value-2
+        clientName: my-api-client
+        clientVersion: 1.0.0
+        labels:
+          my-custom-meta-name-1: custom-value-1
+          my-custom-meta-name-2: custom-value-2
     ResultMetadata:
       allOf:
         - type: object
@@ -507,7 +511,7 @@ components:
             ip:
               type: string
               description: IP from which the request was sent
-              format: ip
+              format: ipv4
               example: 8.8.8.8
             createdAt:
               description: time when the application was created
@@ -531,17 +535,18 @@ components:
         watchlists:
           $ref: "#/components/schemas/Watchlists"
       additionalProperties: false
-      nullable: true
     FaceMatching:
       type: object
       description: Face-matching service compares photo on the document with selfie
       properties:
         comment:
-          description: Short comment for result
+          description: Short comment about the result
           type: string
+          example: Faces are not similar
         verifier:
-          description: Name of verifier
+          description: Name of the verifier
           type: string
+          example: Facemelter
         status:
           $ref: "#/components/schemas/VerificationStatus"
         processingState:
@@ -550,49 +555,48 @@ components:
           $ref: "#/components/schemas/FaceMatchingResult"
         settings:
           type: object
-          description: settings determining the resulting status
+          description: |
+            Settings determining result status.
+
+            If both threshold are equal, result status can only be `declined` or `approved`
           properties:
-            declineMaxScore:
-              description: level to which a decision will be made about `declined` status
+            declineThreshold:
+              description: threshold between `declined` and `needs-review` status
               type: number
               example: 0.4
-            approveMinScore:
-              description: level from which a decision will be made about `approve` status
+            needsReviewThreshold:
+              description: threshold between `needs-review` and `approved` status
               type: number
               example: 0.6
       required:
         - status
-      examples:
-        - status: approved
-          verifier: SphereX
-          comment: Faces are similar
-          settings:
-            declineMaxScore: 0.4
-            approveMinScore: 0.6
-          results:
-            score: 0.7
       additionalProperties: false
     FaceMatchingResult:
-      type: object
+      type: array
       description: Result of face matching service
-      properties:
-        files:
-          description: list of file ids which were involved in checking (from selfie and documents)
-          type: array
-          items:
-            type: string
-        score:
-          description: faces similarity score
-          type: number
-          example: 0.3
-      required:
-        - score
-        - files
-      additionalProperties: false
+      items:
+        properties:
+          files:
+            description: two file ids which were involved in checking
+            type: array
+            minItems: 2
+            maxItems: 2
+            uniqueItems: true
+            items:
+              type: string
+            example: [face-abc1, document-photo-qwe7]
+          score:
+            description: faces similarity score
+            type: number
+            example: 0.3
+        required:
+          - score
+          - files
+        additionalProperties: false
     Liveness:
       type: object
       properties:
-        verifierComment:
+        comment:
           type: string
         verifier:
           type: string
@@ -621,20 +625,26 @@ components:
         processingState:
           $ref: "#/components/schemas/ProcessingState"
         extracted:
-          type: object
-          properties:
-            ocr:
-              type: array
-              items:
-                $ref: "#/components/schemas/DataExtractionResult"
-            mrz:
-              type: array
-              items:
-                $ref: "#/components/schemas/DataExtractionResult"
-            nfc:
-              type: array
-              items:
-                $ref: "#/components/schemas/DataExtractionResult"
+          type: array
+          items:
+            type: object
+            properties:
+              documentId:
+                type: string
+                description: ID of the document which data was extracted
+              ocr:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataExtractionResult"
+              mrz:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataExtractionResult"
+              nfc:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataExtractionResult"
+            additionalProperties: false
       required:
         - status
       additionalProperties: false
@@ -643,31 +653,40 @@ components:
         verifier: Regula
         status: approved
         extracted:
-          ocr:
-            - contentType: string
-              category: First name
-              content: Joe
-            - contentType: string
-              category: First name
-              content: Джо
-              locale: ru_RU
-            - contentType: string
-              category: Last name
-              content: Black
-          mrz:
-            - contentType: string
-              category: First name
-              content: James
-            - contentType: string
-              category: Last name
-              content: Black
-          nfc:
-            - contentType: string
-              category: First name
-              content: Joe
-            - contentType: string
-              category: Last name
-              content: Black
+          - documentId: passport-1
+            ocr:
+              - contentType: string
+                category: First name
+                content: Joe
+              - contentType: string
+                category: First name
+                content: Джо
+                locale: ru_RU
+              - contentType: string
+                category: Last name
+                content: Black
+            mrz:
+              - contentType: string
+                category: First name
+                content: James
+              - contentType: string
+                category: Last name
+                content: Black
+            nfc:
+              - contentType: string
+                category: First name
+                content: Joe
+              - contentType: string
+                category: Last name
+                content: Black
+          - documentId: driving-licence-1
+            ocr:
+              - contentType: string
+                category: First name
+                content: Joe
+              - contentType: string
+                category: Address
+                content: May street
 
     DataExtractionResult:
       type: object
@@ -683,7 +702,7 @@ components:
         locale:
           type: string
           description: The locale of the extracted value
-          examples: [en_UK, en_AU, zh_CN, zh_SG]
+          example: en_UK
       required:
         - contentType
         - category
@@ -693,7 +712,7 @@ components:
     CrossChecking:
       type: object
       properties:
-        verifierComment:
+        comment:
           type: string
         verifier:
           type: string
@@ -701,35 +720,66 @@ components:
           $ref: "#/components/schemas/VerificationStatus"
         processingState:
           $ref: "#/components/schemas/ProcessingState"
-        results:
+        fieldChecking:
           type: array
           items:
-            $ref: "#/components/schemas/CrossCheckingResult"
+            $ref: "#/components/schemas/FieldChecking"
+          description: |
+            Contains the list of checked fields
+
+            If the value corresponding to the field wasn't extracted, such case also would be added to the list
+          example:
+            - category: First name
+              field: John
+              extracted: Joanna
+              equal: false
+              documentId: passport-1
+            - category: Surname
+              field: Doe
+              extracted: ""
+              equal: false
+              documentId: passport-1
+            - category: Date of Birth
+              field: "1999-09-09"
+              extracted: "1999-09-09"
+              equal: true
+              documentId: passport-1
+            - category: Address
+              field: May street
+              extracted: April street
+              equal: false
+              documentId: driving-licence-1
       required:
         - status
       additionalProperties: false
-    CrossCheckingResult:
+    FieldChecking:
       type: object
       properties:
         category:
           type: string
-          example:
-            - First name
-            - Last name
-            - Date of Birth
+          example: First name
         field:
           type: string
+          example: John
         extracted:
           type: string
+          example: Joanna
+        equal:
+          type: boolean
+        documentId:
+          type: string
+          description: ID of the document which extracted data is compared
       required:
         - category
         - field
         - extracted
+        - equal
       additionalProperties: false
+
     Watchlists:
       type: object
       properties:
-        verifierComment:
+        comment:
           type: string
         verifier:
           type: string
@@ -737,6 +787,12 @@ components:
           $ref: "#/components/schemas/VerificationStatus"
         processingState:
           $ref: "#/components/schemas/ProcessingState"
+        sentFields:
+          type: array
+          items:
+            type: string
+          description: Fields which were sent to watchlists service
+          example: [First name, Last name, Date of Birth]
         results:
           type: array
           items:
@@ -746,18 +802,7 @@ components:
       additionalProperties: false
     WatchlistsResult:
       type: object
-      properties:
-        contentType:
-          $ref: "#/components/schemas/ContentType"
-        category:
-          type: string
-        content:
-          type: string
-      required:
-        - contentType
-        - category
-        - content
-      additionalProperties: false
+      description: Watchlists' result can be any data structure
     ContentType:
       type: string
       enum:
