@@ -562,7 +562,7 @@
             "enum": [
               "front",
               "back",
-              "page"
+              "single-page"
             ],
             "example": "front"
           },
@@ -716,7 +716,6 @@
               "ip": {
                 "type": "string",
                 "description": "IP from which the request was sent",
-                "format": "ipv4",
                 "example": "8.8.8.8"
               },
               "createdAt": {

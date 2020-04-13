@@ -386,7 +386,7 @@ components:
           enum:
             - front
             - back
-            - page
+            - single-page
           example: front
         uri:
           description: Data URI of the media
@@ -511,7 +511,6 @@ components:
             ip:
               type: string
               description: IP from which the request was sent
-              format: ipv4
               example: 8.8.8.8
             createdAt:
               description: time when the application was created
