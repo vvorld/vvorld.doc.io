@@ -281,11 +281,8 @@ components:
         content:
           format: date
           type: string
-          description: |
-            Acceptable orders of day, month and year: DMY or YMD
-
-            For example: 06.12.1996, 3/4/2007, 1960-24-02
-          example: "06.12.1996"
+          description: Date in YYYY-MM-DD format
+          example: "1996-12-31"
       required: [contentType, category, content]
 
     SexField:
@@ -429,12 +426,12 @@ components:
             - service: extract-data
               status: approved
               comment: data was extracted
-
         validationDate:
           type: string
           description: The date of validation completion
           format: date-time
           example: "2020-03-17T20:28:37.061Z"
+
       additionalProperties: false
       required:
         - status
@@ -739,8 +736,8 @@ components:
               equal: false
               documentId: passport-1
             - category: Date of Birth
-              field: "1999-09-09"
-              extracted: "1999-09-09"
+              field: "1999-09-31"
+              extracted: "1999-09-31"
               equal: true
               documentId: passport-1
             - category: Address
