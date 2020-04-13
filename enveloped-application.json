@@ -643,7 +643,7 @@
       },
       "VerificationStatus": {
         "type": "string",
-        "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to some problems\n* `needs-review` - TODO\n* `error` - error was occured\n",
+        "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to any facts defined as critical in settings\n* `needs-review` - some facts are defined as considered in settings\n* `error` - error was occured (wrong or missing input data; service error)\n",
         "enum": [
           "declined",
           "approved",

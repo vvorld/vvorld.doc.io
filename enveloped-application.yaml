@@ -442,9 +442,9 @@ components:
       description: |
         The result of verification:
         * `approved` - no problems are found
-        * `declined` - application is declined due to some problems
-        * `needs-review` - TODO
-        * `error` - error was occured
+        * `declined` - application is declined due to any facts defined as critical in settings
+        * `needs-review` - some facts are defined as considered in settings
+        * `error` - error was occured (wrong or missing input data; service error)
       enum:
         - declined
         - approved
