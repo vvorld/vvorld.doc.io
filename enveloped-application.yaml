@@ -56,7 +56,7 @@ paths:
                   errors:
                     type: array
                     items:
-                      type: object
+                      $ref: '#/components/schemas/ValidationError'
         "401":
           description: Missing or wrong authorization headers
           headers:
@@ -833,3 +833,37 @@ components:
         - driving-licence
         - residence-permit
       example: id-card
+
+    ValidationError:
+      type: object
+      properties:
+        keyword:
+          type: string
+          description: |
+            Means what kind of validation was failed
+
+            For example: required, type, format, pattern
+        dataPath:
+          type: string
+          description: Path to invalid part of data
+          example: .application.fields[0].contentType
+        schemaPath:
+          type: string
+          description: Ref to schema rule
+          example: '#/components/schemas/Application/properties/documents/items/properties/id/format'
+        params:
+          type: object
+          example:
+            format: object-id
+        message:
+          type: string
+          description: Human readable validation message
+          example: should have required property 'id'
+      additionalProperties: false
+      example:
+        keyword: pattern
+        dataPath: .application.documents[0].issuingCountry
+        schemaPath: '#/components/schemas/Application/properties/documents/items/properties/issuingCountry/pattern'
+        params:
+          pattern: ^[a-zA-Z]{2,3}$
+        message: should match pattern "^[a-zA-Z]{2,3}$"
