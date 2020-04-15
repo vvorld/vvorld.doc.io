@@ -17,7 +17,11 @@ info:
     Information about API
 
     # SDK
-    Information about API
+    GetID provides iOS, Android and Web SDKs to simplify user's data capturing. 
+    Links to the SDKs documentation and usage examples:
+    - [Web](https://github.com/vvorld/getid-web-sdk)
+    - [iOS](https://github.com/vvorld/getid-ios-sdk)
+    - [Android](https://github.com/vvorld/getid-android-sdk)
 
 paths:
   /api/v1/application:
