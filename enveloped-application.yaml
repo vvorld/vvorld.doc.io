@@ -17,7 +17,7 @@ info:
     Information about API
 
     # SDK
-    GetID provides iOS, Android and Web SDKs to simplify user's data capturing. 
+    GetID provides iOS, Android and Web SDKs to simplify user's data capturing.
     Links to the SDKs documentation and usage examples:
     - [Web](https://github.com/vvorld/getid-web-sdk)
     - [iOS](https://github.com/vvorld/getid-ios-sdk)
@@ -46,7 +46,7 @@ paths:
                     enum: [200]
                   id:
                     type: string
-                    format: ObjectId
+                    format: object-id
                     example: 5e62110968e3fb4d655756d1
         "400":
           description: Invalind request
@@ -97,7 +97,15 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/VerificationResult"
+                allOf:
+                  - $ref: "#/components/schemas/VerificationResult"
+                  - properties:
+                      responseCode:
+                        type: integer
+                        description: contains HTTP code (200)
+                        enum: [200]
+                    required: [responseCode]
+
         "401":
           description: Missing or wrong authorization headers
           headers:
@@ -148,14 +156,10 @@ components:
     VerificationResult:
       type: object
       properties:
-        responseCode:
-          type: integer
-          description: contains HTTP code (200)
-          enum: [200]
         id:
           type: string
           description: Application id
-          format: ObjectId
+          format: object-id
           example: 5e62110968e3fb4d655756d1
         metadata:
           $ref: "#/components/schemas/ResultMetadata"
@@ -171,7 +175,6 @@ components:
           $ref: "#/components/schemas/ServiceResults"
       required:
         - id
-        - responseCode
         - metadata
         - application
         - processingState
@@ -268,6 +271,7 @@ components:
           description: The string value
           example: John
       required: [contentType, category, content]
+      additionalProperties: false
 
     DateField:
       type: object
@@ -288,6 +292,7 @@ components:
           description: Date in YYYY-MM-DD format
           example: "1996-12-31"
       required: [contentType, category, content]
+      additionalProperties: false
 
     SexField:
       type: object
@@ -302,6 +307,7 @@ components:
           type: string
           enum: [male, female]
       required: [contentType, category, content]
+      additionalProperties: false
 
     NumberField:
       type: object
@@ -314,9 +320,10 @@ components:
           description: Kind of data.
         content:
           type: string
-          format: number
+          pattern: ^[0-9]+$
           description: The number value
       required: [contentType, category, content]
+      additionalProperties: false
 
     CountryField:
       type: object
@@ -339,6 +346,7 @@ components:
           pattern: ^[a-zA-Z]{2,3}$
           example: JPN
       required: [contentType, category, content]
+      additionalProperties: false
 
     BoolField:
       type: object
@@ -357,6 +365,7 @@ components:
           description: The bool value
           example: "true"
       required: [contentType, category, content]
+      additionalProperties: false
 
     FacesMedia:
       type: object
@@ -374,6 +383,7 @@ components:
           type: string
           example: "data:video/webm;base64,<data>"
       required: [uri]
+      additionalProperties: false
 
     DocumentMedia:
       type: object
@@ -394,6 +404,7 @@ components:
           type: string
           example: data:image/png;base64,R0lGODlhDAAMAK...
       required: [uri, kind]
+      additionalProperties: false
 
     OverallResult:
       nullable: true
@@ -465,6 +476,10 @@ components:
           * `processing` - application is being processed
 
     SourceMetadata:
+      $ref: '#/components/schemas/BaseMetadata'
+      additionalProperties: false
+
+    BaseMetadata:
       type: object
       description: |
         The meta information about the source of the input data.
@@ -496,7 +511,6 @@ components:
           maxProperties: 30
           additionalProperties:
             type: string
-      additionalProperties: false
       example:
         externalId: ID-2345
         platform: android
@@ -507,6 +521,7 @@ components:
           my-custom-meta-name-2: custom-value-2
     ResultMetadata:
       allOf:
+        - $ref: "#/components/schemas/BaseMetadata"
         - type: object
           properties:
             ip:
@@ -518,8 +533,6 @@ components:
               type: string
               format: date-time
               example: "2020-03-17T20:28:37.061Z"
-        - $ref: "#/components/schemas/SourceMetadata"
-      nullable: false
 
     ServiceResults:
       type: object
@@ -793,16 +806,16 @@ components:
             type: string
           description: Fields which were sent to watchlists service
           example: [First name, Last name, Date of Birth]
-        results:
+        records:
           type: array
           items:
-            $ref: "#/components/schemas/WatchlistsResult"
+            $ref: "#/components/schemas/WatchlistsRecord"
       required:
         - status
       additionalProperties: false
-    WatchlistsResult:
+    WatchlistsRecord:
       type: object
-      description: Watchlists' result can be any data structure
+      description: Watchlists' record can be any data structure
     ContentType:
       type: string
       enum:
