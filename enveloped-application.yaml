@@ -816,12 +816,12 @@ components:
         * watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)
         * face-matching - compare photo on the document with selfie (selfie list and document list must be provided)
         * data-extraction - extract data from the documents (documents must be provided)
-        * crosschecking - check the conformity between fields and extracted data
+        * cross-checking - check the conformity between fields and extracted data
 
         If the list isn't provided, all verifications will be applied.
       items:
         type: string
-        enum: ["watchlists", "face-matching", "data-extraction", "crosschecking"]
+        enum: ["watchlists", "face-matching", "data-extraction", "cross-checking"]
       example: ["watchlists", "face-matching", "data-extraction"]
 
     DocumentType:

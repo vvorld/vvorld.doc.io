@@ -1148,14 +1148,14 @@
       },
       "VerificationTypes": {
         "type": "array",
-        "description": "List of requested verifications:\n* watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)\n* face-matching - compare photo on the document with selfie (selfie list and document list must be provided)\n* data-extraction - extract data from the documents (documents must be provided)\n* crosschecking - check the conformity between fields and extracted data\n\nIf the list isn't provided, all verifications will be applied.\n",
+        "description": "List of requested verifications:\n* watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)\n* face-matching - compare photo on the document with selfie (selfie list and document list must be provided)\n* data-extraction - extract data from the documents (documents must be provided)\n* cross-checking - check the conformity between fields and extracted data\n\nIf the list isn't provided, all verifications will be applied.\n",
         "items": {
           "type": "string",
           "enum": [
             "watchlists",
             "face-matching",
             "data-extraction",
-            "crosschecking"
+            "cross-checking"
           ]
         },
         "example": [
