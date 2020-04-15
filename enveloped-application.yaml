@@ -427,7 +427,7 @@ components:
             - service: watchlists
               status: declined
               comment: found 2 reports against the person
-            - service: extract-data
+            - service: data-extraction
               status: approved
               comment: data was extracted
         validationDate:
@@ -819,14 +819,14 @@ components:
         List of requested verifications:
         * watchlists - check user on PEPs (fields `First name` and `Last name` must be filled)
         * face-matching - compare photo on the document with selfie (selfie list and document list must be provided)
-        * extract-data - extract data from the documents (documents must be provided)
-        * crosschecking - check the conformity between fields and extracted data
+        * data-extraction - extract data from the documents (documents must be provided)
+        * cross-checking - check the conformity between fields and extracted data
 
         If the list isn't provided, all verifications will be applied.
       items:
         type: string
-        enum: ["watchlists", "face-matching", "extract-data", "crosschecking"]
-      example: ["watchlists", "face-matching", "extract-data"]
+        enum: ["watchlists", "face-matching", "data-extraction", "cross-checking"]
+      example: ["watchlists", "face-matching", "data-extraction"]
 
     DocumentType:
       type: string
