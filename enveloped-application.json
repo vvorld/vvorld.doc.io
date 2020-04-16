@@ -286,20 +286,20 @@
             "example": [
               {
                 "contentType": "string",
-                "content": "First Name",
-                "category": "Artem",
+                "content": "Artem",
+                "category": "First name",
                 "requireCheck": true
               },
               {
                 "contentType": "string",
-                "content": "Last Name",
-                "category": "Gerus",
+                "content": "Gerus",
+                "category": "Last name",
                 "requireCheck": true
               },
               {
                 "contentType": "sex",
                 "content": "male",
-                "category": "sex"
+                "category": "Sex"
               },
               {
                 "contentType": "bool",
