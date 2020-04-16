@@ -21,20 +21,7 @@ There are links to SDK Documentation and example-projects.
 
 ## REST API
 
-There is [API specification](public-api.yaml) in [openAPI standard](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md).
-
-To verify application you should call POST method `${SANDBOX}/plugins/v1/acceptor/application` where {SANDBOX} is the address of the sandbox provided by GetID.
-
-The header content type must be `Content-Type: application/json`.
-
-Header must contains authorization bearer provided by GetID.
-
-Request body must contains an application in [specified format](enveloped-application.yaml).
-
-This API method returns status 200 if succeeded. Otherwise it returns:
-- 401 - message:"Unauthorized" (missing or wrong authorization headers)
-- 402 - wrong format or missing data 
-- 400 - empty request body
+There is [API specification](https://vvorld.github.io/) in [openAPI standard](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md).
 
 ### Application example
 
