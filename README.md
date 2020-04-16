@@ -61,13 +61,13 @@ There are example with minimal data passed to GetID to complete verification:
         "fields": [
             {
                 "contentType": "string",
-                "content": "First Name",
-                "category": "Artem"
+                "content": "Artem",
+                "category": "First Name"
             },
             {
                 "contentType": "string",
-                "content": "Last Name",
-                "category": "Gerus"
+                "content": "Gerus",
+                "category": "Last Name"
             },
             {
                 "contentType": "string",
@@ -350,6 +350,6 @@ The complete description of application format is [Enveloped Application](envelo
 
 ## Admin Panel
 
-To review results of verification services you should use the Admin Panel.
+To review results of verification services you should use the Admin Panel. 
 
 By default Admin Panel address is the same as the address of the sandbox provided by GetID.
