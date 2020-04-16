@@ -17,7 +17,7 @@
       "url": "./logo.svg",
       "altText": "GetID"
     },
-    "description": "\n# API\nInformation about API\n\n# SDK\nInformation about API\n"
+    "description": "\n# API\nInformation about API\n\n# SDK\nGetID provides iOS, Android and Web SDKs to simplify user's data capturing.\nLinks to the SDKs documentation and usage examples:\n- [Web](https://github.com/vvorld/getid-web-sdk)\n- [iOS](https://github.com/vvorld/getid-ios-sdk)\n- [Android](https://github.com/vvorld/getid-android-sdk)\n"
   },
   "paths": {
     "/api/v1/application": {
@@ -52,7 +52,7 @@
                     },
                     "id": {
                       "type": "string",
-                      "format": "ObjectId",
+                      "format": "object-id",
                       "example": "5e62110968e3fb4d655756d1"
                     }
                   }
@@ -140,7 +140,25 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VerificationResult"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/VerificationResult"
+                    },
+                    {
+                      "properties": {
+                        "responseCode": {
+                          "type": "integer",
+                          "description": "contains HTTP code (200)",
+                          "enum": [
+                            200
+                          ]
+                        }
+                      },
+                      "required": [
+                        "responseCode"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -223,17 +241,10 @@
       "VerificationResult": {
         "type": "object",
         "properties": {
-          "responseCode": {
-            "type": "integer",
-            "description": "contains HTTP code (200)",
-            "enum": [
-              200
-            ]
-          },
           "id": {
             "type": "string",
             "description": "Application id",
-            "format": "ObjectId",
+            "format": "object-id",
             "example": "5e62110968e3fb4d655756d1"
           },
           "metadata": {
@@ -257,7 +268,6 @@
         },
         "required": [
           "id",
-          "responseCode",
           "metadata",
           "application",
           "processingState"
@@ -394,7 +404,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "DateField": {
         "type": "object",
@@ -421,7 +432,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "SexField": {
         "type": "object",
@@ -450,7 +462,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "NumberField": {
         "type": "object",
@@ -467,7 +480,7 @@
           },
           "content": {
             "type": "string",
-            "format": "number",
+            "pattern": "^[0-9]+$",
             "description": "The number value"
           }
         },
@@ -475,7 +488,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "CountryField": {
         "type": "object",
@@ -501,7 +515,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "BoolField": {
         "type": "object",
@@ -530,7 +545,8 @@
           "contentType",
           "category",
           "content"
-        ]
+        ],
+        "additionalProperties": false
       },
       "FacesMedia": {
         "type": "object",
@@ -547,7 +563,8 @@
         },
         "required": [
           "uri"
-        ]
+        ],
+        "additionalProperties": false
       },
       "DocumentMedia": {
         "type": "object",
@@ -575,7 +592,8 @@
         "required": [
           "uri",
           "kind"
-        ]
+        ],
+        "additionalProperties": false
       },
       "OverallResult": {
         "nullable": true,
@@ -660,6 +678,10 @@
         "description": "Application processing state:\n  * `done` - processing is finished\n  * `processing` - application is being processed\n"
       },
       "SourceMetadata": {
+        "$ref": "#/components/schemas/BaseMetadata",
+        "additionalProperties": false
+      },
+      "BaseMetadata": {
         "type": "object",
         "description": "The meta information about the source of the input data.\nThis field can be used to add custom meta information.\nIt's also will be added to the response as is.\n",
         "properties": {
@@ -696,7 +718,6 @@
             }
           }
         },
-        "additionalProperties": false,
         "example": {
           "externalId": "ID-2345",
           "platform": "android",
@@ -710,6 +731,9 @@
       },
       "ResultMetadata": {
         "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseMetadata"
+          },
           {
             "type": "object",
             "properties": {
@@ -725,12 +749,8 @@
                 "example": "2020-03-17T20:28:37.061Z"
               }
             }
-          },
-          {
-            "$ref": "#/components/schemas/SourceMetadata"
           }
-        ],
-        "nullable": false
+        ]
       },
       "ServiceResults": {
         "type": "object",
@@ -1119,10 +1139,10 @@
               "Date of Birth"
             ]
           },
-          "results": {
+          "records": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WatchlistsResult"
+              "$ref": "#/components/schemas/WatchlistsRecord"
             }
           }
         },
@@ -1131,9 +1151,9 @@
         ],
         "additionalProperties": false
       },
-      "WatchlistsResult": {
+      "WatchlistsRecord": {
         "type": "object",
-        "description": "Watchlists' result can be any data structure"
+        "description": "Watchlists' record can be any data structure"
       },
       "ContentType": {
         "type": "string",
