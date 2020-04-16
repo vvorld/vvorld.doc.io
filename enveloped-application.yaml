@@ -193,19 +193,17 @@ components:
             $ref: "#/components/schemas/Field"
           example:
             - contentType: string
-              content: Artem
               category: First name
-              requireCheck: true
+              content: Artem
             - contentType: string
-              content: Gerus
               category: Last name
-              requireCheck: true
+              content: Gerus
             - contentType: sex
-              content: male
               category: Sex
+              content: male
             - contentType: bool
-              content: "true"
               category: Agree on something
+              content: "true"
         documents:
           type: array
           description: Documents for data extraction or cross-checking
