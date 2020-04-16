@@ -31,28 +31,25 @@ There are example with minimal data passed to GetID to complete verification:
 
 ```json
 {
-    "envelopedApplication": {
-       "extensions": [],
-       "application": {
-           "fields": [],
-           "documents": [
-               {
-                 "issuingCountry": "ee",
-                 "documentType": "passport",
-                 "images": [
-                   {
-                     "name": "front",
-                     "size": "45932",
-                     "format": "base64",
-                     "kind": "front",
-                     "mediaType": "image/jpeg",
-                     "blob": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAA"
-                   }
-                 ]
-               }
-             ]
-       }
-   }
+    "application": {
+        "documents": [
+            {
+                "id": "string",
+                "issuingCountry": "JPN",
+                "documentType": "id-card",
+                "files": [
+                    {
+                        "id": "string",
+                        "kind": "front",
+                        "uri": "data:image/png;base64,R0lGODlhDAAMAK..."
+                    }
+                ]
+            }
+        ]
+    },
+    "verificationTypes": [
+        "data-extraction"
+    ]
 }
 ```
 
@@ -60,45 +57,44 @@ There are example with minimal data passed to GetID to complete verification:
 
 ```json
 {
-    "envelopedApplication": {
-       "extensions": [],
-       "application": {
-           "fields": [
-               {
-                 "contentType": "string",
-                 "category": "First name",
-                 "content": "fname"
-               },
-               {
-                 "contentType": "string",
-                 "category": "Last name",
-                 "content": "lname"
-               },
-               {
-                 "contentType": "string",
-                 "category": "Country",
-                 "content": "Estonia"
-               },
-               {
-                 "contentType": "string",
-                 "category": "Postcode",
-                 "content": "11456"
-               },
-               {
+    "application": {
+        "fields": [
+            {
                 "contentType": "string",
-                "category": "Date Of Birth",
-                "content": "1991-02-03"
-                }
-           ],
-           "documents": []
-       }
-   }
+                "content": "First Name",
+                "category": "Artem"
+            },
+            {
+                "contentType": "string",
+                "content": "Last Name",
+                "category": "Gerus"
+            },
+            {
+                "contentType": "string",
+                "category": "Country",
+                "content": "Estonia"
+              },
+              {
+                "contentType": "string",
+                "category": "Postcode",
+                "content": "11456"
+              },
+              {
+               "contentType": "string",
+               "category": "Date Of Birth",
+               "content": "1991-02-03"
+               }
+        ]
+    },
+    "verificationTypes": [
+        "watchlists"
+    ]
 }
 ```
 
 ### Curl example
 
-There is [example to post application to verification using curl](POST_example.txt). This example contains images of both sides of Estonian id card.
+There is [example to post application to verification using curl](Curl_example.txt). This example contains images of both sides of Estonian id card.
 
 **NB!** Change before execute:
 - `<getidserver>` with address of the sandbox provided by GetID.
@@ -116,99 +112,241 @@ Also you are able to request result using API method `/plugins/v1/acceptor/appli
 
 The result is in [Enveloped Application format](enveloped-application.yaml).
 
-More details in public available in [public API specification](public-api.yaml). 
-
 **Example:**
 
 ```json
 {
-    "envelopedApplication": {
-        "extensions": [],
-        "application": {
-            "fields": [
-                {
-                    "contentType": "string",
-                    "category": "First name",
-                    "content": "fname"
-                },
-                {
-                    "contentType": "string",
-                    "category": "Last name",
-                    "content": "lname"
-                },
-                {
-                    "contentType": "string",
-                    "category": "Date Of Birth",
-                    "content": "1991-08-15"
-                },
-                {
-                    "contentType": "string",
-                    "category": "rdt_First name",
-                    "content": "fname;anotherVariant"
-                },
-                {
-                    "contentType": "string",
-                    "category": "rtd_Date Of Birth",
-                    "content": "1991-08-15;2001-08-15"
-                }
-            ],
-            "documents": [
-                {
-                    "issuingCountry": "ee",
-                    "documentType": "passport",
-                    "images": [
-                        {
-                            "name": "front",
-                            "size": "45932",
-                            "format": "base64",
-                            "kind": "front",
-                            "mediaType": "image/jpeg",
-                            "url": "https://some.address.to.dounload.image"
-                        }
-                    ],
-                    "extractedData": [
-                        {
-                            "contentType": "string",
-                            "category": "ext_First name",
-                            "content": "anotherVariant"
-                        },
-                        {
-                            "contentType": "string",
-                            "category": "ext_Date Of Birth",
-                            "content": "2001-08-15"
-                        }
-                    ]
-                }
-            ]
-        }
+  "id": "5e62110968e3fb4d655756d1",
+  "metadata": {
+    "externalId": "ID-2345",
+    "platform": "android",
+    "clientName": "my-api-client",
+    "clientVersion": "1.0.0",
+    "labels": {
+      "my-custom-meta-name-1": "custom-value-1",
+      "my-custom-meta-name-2": "custom-value-2"
     }
+  },
+  "application": {
+    "fields": [
+      {
+        "contentType": "string",
+        "content": "First Name",
+        "category": "Artem",
+        "requireCheck": true
+      },
+      {
+        "contentType": "string",
+        "content": "Last Name",
+        "category": "Gerus",
+        "requireCheck": true
+      },
+      {
+        "contentType": "sex",
+        "content": "male",
+        "category": "sex"
+      },
+      {
+        "contentType": "bool",
+        "content": "true",
+        "category": "Agree on something"
+      }
+    ],
+    "documents": [
+      {
+        "id": "string",
+        "issuingCountry": "JPN",
+        "documentType": "id-card",
+        "files": [
+          {
+            "id": "string",
+            "kind": "front",
+            "uri": "data:image/png;base64,R0lGODlhDAAMAK..."
+          }
+        ]
+      }
+    ],
+    "selfie": {
+      "files": [
+        {
+          "id": "string",
+          "uri": "data:video/webm;base64,<data>"
+        }
+      ]
+    }
+  },
+  "verificationTypes": [
+    "watchlists",
+    "face-matching",
+    "data-extraction"
+  ],
+  "processingState": "done",
+  "overallResult": {
+    "status": "declined",
+    "comments": [
+      {
+        "service": "face-matching",
+        "status": "approved",
+        "comment": "faces are similar"
+      },
+      {
+        "service": "watchlists",
+        "status": "declined",
+        "comment": "found 2 reports against the person"
+      },
+      {
+        "service": "data-extraction",
+        "status": "approved",
+        "comment": "data was extracted"
+      }
+    ],
+    "validationDate": "2020-03-17T20:28:37.061Z"
+  },
+  "servicesResults": {
+    "faceMatching": {
+      "comment": "Faces are not similar",
+      "verifier": "Facemelter",
+      "status": "declined",
+      "processingState": "done",
+      "results": [
+        {
+          "files": [
+            "face-abc1",
+            "document-photo-qwe7"
+          ],
+          "score": 0.3
+        }
+      ],
+      "settings": {
+        "declineThreshold": 0.4,
+        "needsReviewThreshold": 0.6
+      }
+    },
+    "dataExtraction": {
+      "comment": "Data was extracted",
+      "verifier": "Regula",
+      "status": "approved",
+      "extracted": [
+        {
+          "documentId": "passport-1",
+          "ocr": [
+            {
+              "contentType": "string",
+              "category": "First name",
+              "content": "Joe"
+            },
+            {
+              "contentType": "string",
+              "category": "First name",
+              "content": "Джо",
+              "locale": "ru_RU"
+            },
+            {
+              "contentType": "string",
+              "category": "Last name",
+              "content": "Black"
+            }
+          ],
+          "mrz": [
+            {
+              "contentType": "string",
+              "category": "First name",
+              "content": "James"
+            },
+            {
+              "contentType": "string",
+              "category": "Last name",
+              "content": "Black"
+            }
+          ],
+          "nfc": [
+            {
+              "contentType": "string",
+              "category": "First name",
+              "content": "Joe"
+            },
+            {
+              "contentType": "string",
+              "category": "Last name",
+              "content": "Black"
+            }
+          ]
+        },
+        {
+          "documentId": "driving-licence-1",
+          "ocr": [
+            {
+              "contentType": "string",
+              "category": "First name",
+              "content": "Joe"
+            },
+            {
+              "contentType": "string",
+              "category": "Address",
+              "content": "May street"
+            }
+          ]
+        }
+      ]
+    },
+    "crossChecking": {
+      "comment": "string",
+      "verifier": "string",
+      "status": "declined",
+      "processingState": "done",
+      "fieldChecking": [
+        {
+          "category": "First name",
+          "field": "John",
+          "extracted": "Joanna",
+          "equal": false,
+          "documentId": "passport-1"
+        },
+        {
+          "category": "Surname",
+          "field": "Doe",
+          "extracted": "",
+          "equal": false,
+          "documentId": "passport-1"
+        },
+        {
+          "category": "Date of Birth",
+          "field": "1999-09-31",
+          "extracted": "1999-09-31",
+          "equal": true,
+          "documentId": "passport-1"
+        },
+        {
+          "category": "Address",
+          "field": "May street",
+          "extracted": "April street",
+          "equal": false,
+          "documentId": "driving-licence-1"
+        }
+      ]
+    },
+    "watchlists": {
+      "comment": "string",
+      "verifier": "string",
+      "status": "declined",
+      "processingState": "done",
+      "sentFields": [
+        "First name",
+        "Last name",
+        "Date of Birth"
+      ],
+      "records": [
+        {}
+      ]
+    }
+  },
+  "responseCode": 200
 }
 ```
 
 ### Reading results
 
 The complete description of application format is [Enveloped Application](enveloped-application.yaml).
-
-All extracted data from documents will be written into the extractedData array. All of the extracted fields will get a prefix `ext_` in it’s category value which stands for `extracted`.
-
-```json
-{
-"contentType": "string",
-"category": "ext_First name",
-"content": "John"
-},
-```
-
-Extracted value will be placed under `content`.
-If provided data doesn’t match the extracted data then additional fields with category prefix `rtd_` and category will be added to the fields array. In this case `content` contains both values provided and extracted respectively.
-
-```json
-{
-    "contentType": "string",
-    "category": "rdt_First name",
-    "content": "fname;John"
-},
-```
 
 ## Admin Panel
 
