@@ -194,15 +194,15 @@ components:
           example:
             - contentType: string
               content: Artem
-              category: First Name
+              category: First name
               requireCheck: true
             - contentType: string
               content: Gerus
-              category: Last Name
+              category: Last name
               requireCheck: true
             - contentType: sex
               content: male
-              category: sex
+              category: Sex
             - contentType: bool
               content: "true"
               category: Agree on something
