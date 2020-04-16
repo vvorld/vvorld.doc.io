@@ -61,13 +61,13 @@ There are example with minimal data passed to GetID to complete verification:
         "fields": [
             {
                 "contentType": "string",
-                "content": "First Name",
-                "category": "Artem"
+                "content": "Artem",
+                "category": "First Name"
             },
             {
                 "contentType": "string",
-                "content": "Last Name",
-                "category": "Gerus"
+                "content": "Gerus",
+                "category": "Last Name"
             },
             {
                 "contentType": "string",

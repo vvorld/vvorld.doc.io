@@ -193,12 +193,12 @@ components:
             $ref: "#/components/schemas/Field"
           example:
             - contentType: string
-              content: First Name
-              category: Artem
+              content: Artem
+              category: First Name
               requireCheck: true
             - contentType: string
-              content: Last Name
-              category: Gerus
+              content: Gerus
+              category: Last Name
               requireCheck: true
             - contentType: sex
               content: male
