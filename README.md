@@ -132,14 +132,12 @@ The result is in [Enveloped Application format](enveloped-application.yaml).
       {
         "contentType": "string",
         "content": "First Name",
-        "category": "Artem",
-        "requireCheck": true
+        "category": "Artem"
       },
       {
         "contentType": "string",
         "content": "Last Name",
-        "category": "Gerus",
-        "requireCheck": true
+        "category": "Gerus"
       },
       {
         "contentType": "sex",
