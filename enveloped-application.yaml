@@ -424,9 +424,8 @@ components:
       additionalProperties: false
 
     OverallResult:
-      nullable: true
       type: object
-      description: Summary verification result (`null` if state isn't `done`)
+      description: Summary verification result (omitted if state is `processing`)
       properties:
         status:
           description: The worst result from all services
