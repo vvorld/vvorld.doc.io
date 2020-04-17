@@ -153,6 +153,9 @@ components:
           $ref: "#/components/schemas/Application"
         verificationTypes:
           $ref: "#/components/schemas/VerificationTypes"
+      required:
+        - application
+      additionalProperties: false
     VerificationResult:
       type: object
       properties:
@@ -230,6 +233,7 @@ components:
                   $ref: "#/components/schemas/DocumentMedia"
             required:
               - files
+            additionalProperties: false
         selfie:
           description: Media required for `face-matching`
           properties:
@@ -239,6 +243,8 @@ components:
                 $ref: "#/components/schemas/FacesMedia"
           required:
             - files
+          additionalProperties: false
+      additionalProperties: false
 
     Field:
       type: object

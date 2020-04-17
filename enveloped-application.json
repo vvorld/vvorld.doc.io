@@ -236,7 +236,11 @@
           "verificationTypes": {
             "$ref": "#/components/schemas/VerificationTypes"
           }
-        }
+        },
+        "required": [
+          "application"
+        ],
+        "additionalProperties": false
       },
       "VerificationResult": {
         "type": "object",
@@ -335,7 +339,8 @@
               },
               "required": [
                 "files"
-              ]
+              ],
+              "additionalProperties": false
             }
           },
           "selfie": {
@@ -350,9 +355,11 @@
             },
             "required": [
               "files"
-            ]
+            ],
+            "additionalProperties": false
           }
-        }
+        },
+        "additionalProperties": false
       },
       "Field": {
         "type": "object",
