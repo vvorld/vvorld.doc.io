@@ -37,6 +37,29 @@
             }
           }
         },
+        "callbacks": {
+          "done": {
+            "https://your.site/callback-url": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/VerificationResult"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Your server returns this code if it accepts the callback"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",

@@ -36,7 +36,7 @@ paths:
               $ref: "#/components/schemas/EnvelopedApplication"
       callbacks:
         done:
-          callbackUrl:
+          'https://your.site/callback-url':
             post:
               requestBody:
                 required: true
