@@ -370,35 +370,6 @@
           }
         ]
       },
-      "Documents": {
-        "type": "array",
-        "description": "Documents for data extraction or cross-checking",
-        "items": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "document id (filled automatically when missing)"
-            },
-            "issuingCountry": {
-              "type": "string",
-              "description": "The code of the country of issue\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
-              "pattern": "^[a-zA-Z]{2,3}$",
-              "example": "JPN"
-            },
-            "documentType": {
-              "$ref": "#/components/schemas/DocumentType"
-            },
-            "files": {
-              "description": "Document photos or scans",
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/DocumentMedia"
-              }
-            }
-          }
-        }
-      },
       "Document": {
         "type": "object",
         "properties": {
