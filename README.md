@@ -62,26 +62,16 @@ There are example with minimal data passed to GetID to complete verification:
             {
                 "contentType": "string",
                 "content": "Artem",
-                "category": "First Name"
+                "category": "First name"
             },
             {
                 "contentType": "string",
                 "content": "Gerus",
-                "category": "Last Name"
+                "category": "Last name"
             },
-            {
-                "contentType": "string",
-                "category": "Country",
-                "content": "Estonia"
-              },
-              {
-                "contentType": "string",
-                "category": "Postcode",
-                "content": "11456"
-              },
               {
                "contentType": "string",
-               "category": "Date Of Birth",
+               "category": "Date of birth",
                "content": "1991-02-03"
                }
         ]
