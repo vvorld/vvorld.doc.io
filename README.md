@@ -121,18 +121,18 @@ The result is in [Enveloped Application format](enveloped-application.yaml).
     "fields": [
       {
         "contentType": "string",
-        "content": "First Name",
+        "content": "First name",
         "category": "Artem"
       },
       {
         "contentType": "string",
-        "content": "Last Name",
+        "content": "Last name",
         "category": "Gerus"
       },
       {
         "contentType": "sex",
         "content": "male",
-        "category": "sex"
+        "category": "Gender"
       },
       {
         "contentType": "bool",
@@ -291,14 +291,14 @@ The result is in [Enveloped Application format](enveloped-application.yaml).
           "documentId": "passport-1"
         },
         {
-          "category": "Surname",
+          "category": "Last name",
           "field": "Doe",
           "extracted": "",
           "equal": false,
           "documentId": "passport-1"
         },
         {
-          "category": "Date of Birth",
+          "category": "Date of birth",
           "field": "1999-09-31",
           "extracted": "1999-09-31",
           "equal": true,
