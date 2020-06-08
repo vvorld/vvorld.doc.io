@@ -321,7 +321,7 @@ The result is in [Enveloped Application format](enveloped-application.yaml).
       "sentFields": [
         "First name",
         "Last name",
-        "Date of Birth"
+        "Date of birth"
       ],
       "records": [
         {}
