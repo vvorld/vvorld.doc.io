@@ -49,7 +49,7 @@ paths:
                     format: object-id
                     example: 5e62110968e3fb4d655756d1
         "400":
-          description: Invalind request
+          description: Invalid request
           content:
             "application/json":
               schema:
@@ -79,6 +79,47 @@ paths:
                   errorMessage:
                     type: string
                     example: Unauthorized
+      callbacks:
+        onOrderedCallback:
+          'custom predefined by client webhook url':
+            post:
+              parameters:
+                - in: header
+                  name: Cache-Control
+                  description: instructions for caching
+                  schema:
+                    type: string
+                    example:  'no-cache'
+                - in: header
+                  name: Accept
+                  schema:
+                    type: string
+                    example:  'application/json'
+                - in: header
+                  name: Content-Type
+                  description: type of content
+                  schema:
+                    type: string
+                    example:  'application/json'
+                - in: header
+                  name: X-Signature
+                  description: Response hashed with timestamp and signed with private key
+                  schema:
+                    type: string
+                - in: header
+                  name: X-Timestamp
+                  description: Timestamp (moment of signing)
+                  schema:
+                    type: number
+                    format: unix timestamp
+              requestBody:
+                content:
+                  "application/json":
+                    schema:
+                      $ref: "#/components/schemas/EnvelopedApplication"
+              responses:
+                '200':
+                  description: All good
 
   /api/v1/application/{id}:
     get:
@@ -167,7 +208,7 @@ components:
         metadata:
           $ref: "#/components/schemas/ResultMetadata"
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: "#/components/schemas/ResultApplication"
         verificationTypes:
           $ref: "#/components/schemas/VerificationTypes"
         processingState:
@@ -176,6 +217,8 @@ components:
           $ref: "#/components/schemas/OverallResult"
         servicesResults:
           $ref: "#/components/schemas/ServiceResults"
+        comment:
+          $ref: "#/components/schemas/Comment"
       required:
         - id
         - metadata
@@ -187,53 +230,12 @@ components:
       description: The data to verify
       properties:
         fields:
-          type: array
-          description: |
-            Data fields to check.
-
-            For example: Last Name and Date of Birth sent from web form
-          items:
-            $ref: "#/components/schemas/Field"
-          example:
-            - contentType: string
-              category: First name
-              content: Artem
-            - contentType: string
-              category: Last name
-              content: Gerus
-            - contentType: sex
-              category: Sex
-              content: male
-            - contentType: bool
-              category: Agree on something
-              content: "true"
+          $ref: '#/components/schemas/Fields'
         documents:
           type: array
           description: Documents for data extraction or cross-checking
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: document id (filled automatically when missing)
-              issuingCountry:
-                type: string
-                description: |
-                  The code of the country of issue
-                  ([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
-                  or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))
-                pattern: ^[a-zA-Z]{2,3}$
-                example: JPN
-              documentType:
-                $ref: "#/components/schemas/DocumentType"
-              files:
-                description: Document photos or scans
-                type: array
-                items:
-                  $ref: "#/components/schemas/DocumentMedia"
-            required:
-              - files
-            additionalProperties: false
+            $ref: "#/components/schemas/Document"
         selfie:
           description: Media required for `face-matching`
           properties:
@@ -244,6 +246,108 @@ components:
           required:
             - files
           additionalProperties: false
+      additionalProperties: false
+
+    ResultApplication:
+      type: object
+      description: The data to verify
+      properties:
+        fields:
+          type: array
+          # TODO return back to "$ref: '#/components/schemas/Fields'"
+          # it's temporary workaround to return f, m, F, M
+        documents:
+          type: array
+          description: Documents for data extraction or cross-checking
+          items:
+            $ref: '#/components/schemas/ResultDocument'
+        selfie:
+          description: Media required for `face-matching`
+          properties:
+            files:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResultFacesMedia'
+          required:
+            - files
+          additionalProperties: false
+      additionalProperties: false
+
+    Fields:
+      type: array
+      description: |
+        Data fields to check.
+
+        For example: Last name and Date of birth sent from web form
+      items:
+        $ref: "#/components/schemas/Field"
+      example:
+        - contentType: string
+          category: First name
+          content: Artem
+        - contentType: string
+          category: Last name
+          content: Gerus
+        - contentType: sex
+          category: Gender
+          content: male
+        - contentType: bool
+          category: Agree on something
+          content: "true"
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          description: document id (filled automatically when missing)
+        issuingCountry:
+          type: string
+          description: |
+            The code of the country of issue
+            ([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
+            or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))
+          pattern: ^[a-zA-Z]{2,3}$
+          example: JPN
+        documentType:
+          $ref: "#/components/schemas/DocumentType"
+        files:
+          description: Document photos or scans
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentMedia"
+        nfc:
+          $ref: "#/components/schemas/NFCContent"
+
+      required:
+        - files
+      additionalProperties: false
+
+    ResultDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          description: document id (filled automatically when missing)
+        issuingCountry:
+          type: string
+          description: |
+            The code of the country of issue
+            ([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
+            or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))
+          pattern: ^[a-zA-Z]{2,3}$|unknown$
+          example: JPN
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        files:
+          description: Temporary links to the document photos or scans
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultDocumentMedia'
+        nfc:
+          $ref: "#/components/schemas/NFCContent"
+      required:
+        - files
       additionalProperties: false
 
     Field:
@@ -267,7 +371,7 @@ components:
           description: |
             Kind of data.
 
-            For example: First name, Surname
+            For example: First name, Last name
           example: First name
         content:
           type: string
@@ -288,8 +392,8 @@ components:
           description: |
             Kind of data.
 
-            For example: Date of Birth
-          example: Date of Birth
+            For example: Date of birth
+          example: Date of birth
         content:
           format: date
           type: string
@@ -306,7 +410,7 @@ components:
           enum: [sex]
         category:
           type: string
-          enum: [Sex]
+          enum: [Gender]
         content:
           type: string
           enum: [male, female]
@@ -340,7 +444,7 @@ components:
           description: |
             Kind of data.
 
-            For example: Country of Birth
+            For example: Country of birth
         content:
           type: string
           description: |
@@ -385,7 +489,25 @@ components:
 
             Acceptable video formats: WebM + VP8, MP4 + AVC
           type: string
-          example: "data:video/webm;base64,<data>"
+          format: media-data-uri
+          example: data:video/webm;base64,aGVsbG8=
+      required: [uri]
+      additionalProperties: false
+
+    ResultFacesMedia:
+      type: object
+      properties:
+        id:
+          type: string
+          description: file id (filled automatically when missing)
+        uri:
+          description: Temporary link to the media
+          type: string
+          format: uri
+          example: https://some.site/image.jpeg?t=123
+        mediaType:
+          type: string
+          example: image/jpeg
       required: [uri]
       additionalProperties: false
 
@@ -404,10 +526,41 @@ components:
             - single-page
           example: front
         uri:
-          description: Data URI of the media
+          description: |
+            Data URI of the media
+
+            All common image formats are acceptable.
           type: string
-          example: data:image/png;base64,R0lGODlhDAAMAK...
+          format: media-data-uri
+          example: data:image/png;base64,aGVsbG8=
       required: [uri, kind]
+      additionalProperties: false
+
+    ResultDocumentMedia:
+      type: object
+      properties:
+        id:
+          type: string
+          description: file id (filled automatically when missing)
+        kind:
+          type: string
+          description: kind of document page
+          enum:
+            - front
+            - back
+            - single-page
+            - origin
+            - page
+          example: front
+        uri:
+          description: Temporary link to the media
+          type: string
+          format: uri
+          example: https://some.site/image.jpeg?t=123
+        mediaType:
+          type: string
+          example: image/jpeg
+      required: [id, uri, kind]
       additionalProperties: false
 
     OverallResult:
@@ -444,6 +597,27 @@ components:
             - service: data-extraction
               status: approved
               comment: data was extracted
+        concerns:
+          description: A summary of concern
+          type: array          
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+              service:
+                type: string
+              status:
+                type: string
+          example:
+            - service: face-matching
+              status: declined
+              comment: photo is not selfie
+
+            - service: crosschecking
+              status: needs-review
+              comment: Extracted last name doesn't match data from the field
+
         validationDate:
           type: string
           description: The date of validation completion
@@ -514,6 +688,22 @@ components:
           maxProperties: 30
           additionalProperties:
             type: string
+        ipAddress:
+          type: string
+          description: IP from which the request was sent
+          example: 8.8.8.8
+        country:
+          type: string
+          description: Country detected from IP
+          example: EST
+        city:
+          type: string
+          description: City detected from IP
+          example: Tallinn
+        userAgent:
+          type: string
+          description: user agent data retrieved from user's client which send app from sdk
+          example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36
       example:
         externalId: ID-2345
         platform: android
@@ -660,13 +850,30 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/DataExtractionResult"
+              images:
+                type: array
+                items:
+                  properties:
+                    kind:
+                      type: string
+                      example: portrait
+                    uri:
+                      description: Temporary link to the media
+                      type: string
+                      format: uri
+                      example: https://some.site/image.jpeg?t=123
+                  additionalProperties: false
+                  required:
+                    - kind
+                    - uri
             additionalProperties: false
+
       required:
         - status
       additionalProperties: false
       example:
         comment: Data was extracted
-        verifier: Regula
+        verifier: DeerPlugin
         status: approved
         extracted:
           - documentId: passport-1
@@ -750,12 +957,12 @@ components:
               extracted: Joanna
               equal: false
               documentId: passport-1
-            - category: Surname
+            - category: Last name
               field: Doe
               extracted: ""
               equal: false
               documentId: passport-1
-            - category: Date of Birth
+            - category: Date of birth
               field: "1999-09-31"
               extracted: "1999-09-31"
               equal: true
@@ -765,6 +972,10 @@ components:
               extracted: April street
               equal: false
               documentId: driving-licence-1
+        documentDataChecking:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentDataChecking"
       required:
         - status
       additionalProperties: false
@@ -792,6 +1003,37 @@ components:
         - equal
       additionalProperties: false
 
+    DocumentDataChecking:
+      type: object
+      properties:
+        category:
+          type: string
+          example: First name
+        mrz:
+          type: string
+        ocr:
+          type: string
+        nfc:
+          type: string
+        equal:
+          type: boolean
+        valid:
+          type: boolean
+        message:
+          type: string
+        documentId:
+          type: string
+          description: ID of the document which extracted data is compared
+        conflicts:
+          description: List of conflicts
+          type: array
+          items:
+            type: string
+      required:
+        - category
+        - equal
+      additionalProperties: false
+
     Watchlists:
       type: object
       properties:
@@ -808,7 +1050,7 @@ components:
           items:
             type: string
           description: Fields which were sent to watchlists service
-          example: [First name, Last name, Date of Birth]
+          example: [First name, Last name, Date of birth]
         records:
           type: array
           items:
@@ -852,8 +1094,25 @@ components:
         - id-card
         - driving-licence
         - residence-permit
+        - unknown
       example: id-card
-
+    Comment:
+      type: object
+      description: User comment
+      properties:
+        text:
+          type: string
+          description: Text of comment
+          example: ""
+        author:
+          type: string
+          description: Login of user who save comment
+          example: "admin"
+        createdAt:
+          type: string
+          description: Date of comment creation
+          format: date-time
+          example: "2020-03-17T20:28:37.061Z"
     ValidationError:
       type: object
       properties:
@@ -887,3 +1146,10 @@ components:
         params:
           pattern: ^[a-zA-Z]{2,3}$
         message: should match pattern "^[a-zA-Z]{2,3}$"
+    NFCContent:
+      type: object
+      properties:
+        mrz:
+          type: string
+          description: The raw (non-parsed) MRZ string pulled from the chip.
+      required: [mrz]
