@@ -255,7 +255,7 @@
             "$ref": "#/components/schemas/ResultMetadata"
           },
           "application": {
-            "$ref": "#/components/schemas/Application"
+            "$ref": "#/components/schemas/ResultApplication"
           },
           "verificationTypes": {
             "$ref": "#/components/schemas/VerificationTypes"
@@ -282,65 +282,13 @@
         "description": "The data to verify",
         "properties": {
           "fields": {
-            "type": "array",
-            "description": "Data fields to check.\n\nFor example: Last Name and Date of Birth sent from web form\n",
-            "items": {
-              "$ref": "#/components/schemas/Field"
-            },
-            "example": [
-              {
-                "contentType": "string",
-                "category": "First name",
-                "content": "Artem"
-              },
-              {
-                "contentType": "string",
-                "category": "Last name",
-                "content": "Gerus"
-              },
-              {
-                "contentType": "sex",
-                "category": "Sex",
-                "content": "male"
-              },
-              {
-                "contentType": "bool",
-                "category": "Agree on something",
-                "content": "true"
-              }
-            ]
+            "$ref": "#/components/schemas/Fields"
           },
           "documents": {
             "type": "array",
             "description": "Documents for data extraction or cross-checking",
             "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "description": "document id (filled automatically when missing)"
-                },
-                "issuingCountry": {
-                  "type": "string",
-                  "description": "The code of the country of issue\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
-                  "pattern": "^[a-zA-Z]{2,3}$",
-                  "example": "JPN"
-                },
-                "documentType": {
-                  "$ref": "#/components/schemas/DocumentType"
-                },
-                "files": {
-                  "description": "Document photos or scans",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DocumentMedia"
-                  }
-                }
-              },
-              "required": [
-                "files"
-              ],
-              "additionalProperties": false
+              "$ref": "#/components/schemas/Document"
             }
           },
           "selfie": {
@@ -359,6 +307,125 @@
             "additionalProperties": false
           }
         },
+        "additionalProperties": false
+      },
+      "ResultApplication": {
+        "type": "object",
+        "description": "The data to verify",
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/Fields"
+          },
+          "documents": {
+            "type": "array",
+            "description": "Documents for data extraction or cross-checking",
+            "items": {
+              "$ref": "#/components/schemas/ResultDocument"
+            }
+          },
+          "selfie": {
+            "description": "Media required for `face-matching`",
+            "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ResultFacesMedia"
+                }
+              }
+            },
+            "required": [
+              "files"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "Fields": {
+        "type": "array",
+        "description": "Data fields to check.\n\nFor example: Last Name and Date of Birth sent from web form\n",
+        "items": {
+          "$ref": "#/components/schemas/Field"
+        },
+        "example": [
+          {
+            "contentType": "string",
+            "category": "First name",
+            "content": "Artem"
+          },
+          {
+            "contentType": "string",
+            "category": "Last name",
+            "content": "Gerus"
+          },
+          {
+            "contentType": "sex",
+            "category": "Sex",
+            "content": "male"
+          },
+          {
+            "contentType": "bool",
+            "category": "Agree on something",
+            "content": "true"
+          }
+        ]
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "document id (filled automatically when missing)"
+          },
+          "issuingCountry": {
+            "type": "string",
+            "description": "The code of the country of issue\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
+            "pattern": "^[a-zA-Z]{2,3}$",
+            "example": "JPN"
+          },
+          "documentType": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "files": {
+            "description": "Document photos or scans",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentMedia"
+            }
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "additionalProperties": false
+      },
+      "ResultDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "document id (filled automatically when missing)"
+          },
+          "issuingCountry": {
+            "type": "string",
+            "description": "The code of the country of issue\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
+            "pattern": "^[a-zA-Z]{2,3}$",
+            "example": "JPN"
+          },
+          "documentType": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "files": {
+            "description": "Temporary links to the document photos or scans",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResultDocumentMedia"
+            }
+          }
+        },
+        "required": [
+          "files"
+        ],
         "additionalProperties": false
       },
       "Field": {
@@ -563,7 +630,27 @@
           "uri": {
             "description": "Data URI of the media\n\nAll common image formats are acceptable.\n\nAcceptable video formats: WebM + VP8, MP4 + AVC\n",
             "type": "string",
-            "example": "data:video/webm;base64,<data>"
+            "format": "media-data-uri",
+            "example": "data:video/webm;base64,aGVsbG8="
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "additionalProperties": false
+      },
+      "ResultFacesMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
+          "uri": {
+            "description": "Temporary link to the media",
+            "type": "string",
+            "format": "uri",
+            "example": "https://some.site/image.jpeg?t=123"
           }
         },
         "required": [
@@ -589,12 +676,44 @@
             "example": "front"
           },
           "uri": {
-            "description": "Data URI of the media",
+            "description": "Data URI of the media\n\nAll common image formats are acceptable.\n",
             "type": "string",
-            "example": "data:image/png;base64,R0lGODlhDAAMAK..."
+            "format": "media-data-uri",
+            "example": "data:image/png;base64,aGVsbG8="
           }
         },
         "required": [
+          "uri",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "ResultDocumentMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
+          "kind": {
+            "type": "string",
+            "description": "kind of document page",
+            "enum": [
+              "front",
+              "back",
+              "single-page"
+            ],
+            "example": "front"
+          },
+          "uri": {
+            "description": "Temporary link to the media",
+            "type": "string",
+            "format": "uri",
+            "example": "https://some.site/image.jpeg?t=123"
+          }
+        },
+        "required": [
+          "id",
           "uri",
           "kind"
         ],
