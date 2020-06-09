@@ -98,7 +98,7 @@ You are able to get the verification result in two ways:
 
 To get the result by callback you must specify callback URL in Admin Panel (Settings->Callback URL). 
 
-Also you are able to request result using API method `/plugins/v1/acceptor/application/{appId}`.
+Also you are able to request result using API method `/api/v1/application/{{appId}}`.
 
 The result is in [Enveloped Application format](enveloped-application.yaml).
 
