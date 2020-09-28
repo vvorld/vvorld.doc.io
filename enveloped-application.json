@@ -167,7 +167,7 @@
                                     "content": {
                                         "application/json": {
                                             "schema": {
-                                                "$ref": "#/components/schemas/EnvelopedApplication"
+                                                "$ref": "#/components/schemas/VerificationResult"
                                             }
                                         }
                                     }
