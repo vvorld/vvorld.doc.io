@@ -167,7 +167,7 @@
                                     "content": {
                                         "application/json": {
                                             "schema": {
-                                                "$ref": "#/components/schemas/VerificationResult"
+                                                "$ref": "#/components/schemas/EnvelopedApplication"
                                             }
                                         }
                                     }
@@ -431,7 +431,7 @@
                     {
                         "contentType": "sex",
                         "category": "Gender",
-                        "content": "male"
+                        "content": "M"
                     },
                     {
                         "contentType": "bool",
@@ -948,6 +948,11 @@
                         "description": "The version of the client which sent the request",
                         "example": "1.0.0"
                     },
+                    "acVersion": {
+                        "type": "string",
+                        "description": "The version of the acceptor client which received the request",
+                        "example": "1.0.0"
+                    },
                     "labels": {
                         "type": "object",
                         "description": "Custom key-value labels (maximum 30)",
@@ -975,6 +980,16 @@
                         "type": "string",
                         "description": "user agent data retrieved from user's client which send app from sdk",
                         "example": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36"
+                    },
+                    "author": {
+                        "type": "string",
+                        "description": "username or email of author of the request",
+                        "example": "admin"
+                    },
+                    "disableCs": {
+                        "type": "boolean",
+                        "description": "allows to disable customer support check",
+                        "example": true
                     }
                 },
                 "example": {
@@ -1025,6 +1040,12 @@
                     },
                     "watchlists": {
                         "$ref": "#/components/schemas/Watchlists"
+                    },
+                    "docCheck": {
+                        "$ref": "#/components/schemas/DocCheck"
+                    },
+                    "profileCheck": {
+                        "$ref": "#/components/schemas/ProfileCheck"
                     }
                 },
                 "additionalProperties": false
@@ -1092,6 +1113,9 @@
                                 "face-abc1",
                                 "document-photo-qwe7"
                             ]
+                        },
+                        "selfieQuality": {
+                            "$ref": "#/components/schemas/CheckList"
                         },
                         "score": {
                             "description": "faces similarity score",
@@ -1304,6 +1328,64 @@
                 ],
                 "additionalProperties": false
             },
+            "DocCheck": {
+                "type": "object",
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "verifier": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/VerificationStatus"
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ProcessingState"
+                    },
+                    "documentDataChecking": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentDataChecking"
+                        }
+                    },
+                    "documentPhotoQuality": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "dataExtractionConsistency": {
+                        "$ref": "#/components/schemas/CheckList"
+                    }
+                }
+            },
+            "ProfileCheck": {
+                "type": "object",
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "verifier": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/VerificationStatus"
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ProcessingState"
+                    },
+                    "formCompare": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "matchLocation": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "fieldChecking": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FieldChecking"
+                        }
+                    }
+                }
+            },
             "CrossChecking": {
                 "type": "object",
                 "properties": {
@@ -1361,6 +1443,30 @@
                         "items": {
                             "$ref": "#/components/schemas/DocumentDataChecking"
                         }
+                    },
+                    "documentPhotoQuality": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "originalDocumentPresence": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "documentQuality": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "fraudAssesment": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "formCompare": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "matchLocation": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "documentCompare": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "dataExtractionConsistency": {
+                        "$ref": "#/components/schemas/CheckList"
                     }
                 },
                 "required": [
@@ -1385,6 +1491,12 @@
                     },
                     "equal": {
                         "type": "boolean"
+                    },
+                    "status": {
+                        "type": {
+                            "$ref": "#/components/schemas/VerificationStatus"
+                        },
+                        "description": "Status of check data"
                     },
                     "documentId": {
                         "type": "string",
@@ -1416,10 +1528,19 @@
                         "type": "string"
                     },
                     "equal": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Null means that check between fields on the document was not performed"
                     },
                     "valid": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Document field validation result (false means that value is incorrect)"
+                    },
+                    "status": {
+                        "type": {
+                            "$ref": "#/components/schemas/VerificationStatus"
+                        },
+                        "description": "Status of check data"
                     },
                     "message": {
                         "type": "string"
@@ -1468,6 +1589,9 @@
                             "Last name",
                             "Date of birth"
                         ]
+                    },
+                    "summary": {
+                        "$ref": "#/components/schemas/CheckList"
                     },
                     "records": {
                         "type": "array",
@@ -1598,6 +1722,46 @@
                 },
                 "required": [
                     "mrz"
+                ]
+            },
+            "CheckList": {
+                "type": "object",
+                "properties": {
+                    "group": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "name",
+                                "description"
+                            ]
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "group",
+                    "considers"
                 ]
             }
         }
