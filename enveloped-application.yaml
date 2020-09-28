@@ -60,7 +60,7 @@ paths:
                   errors:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ValidationError'
+                      $ref: "#/components/schemas/ValidationError"
         "401":
           description: Missing or wrong authorization headers
           headers:
@@ -81,7 +81,7 @@ paths:
                     example: Unauthorized
       callbacks:
         onOrderedCallback:
-          'custom predefined by client webhook url':
+          "custom predefined by client webhook url":
             post:
               parameters:
                 - in: header
@@ -89,18 +89,18 @@ paths:
                   description: instructions for caching
                   schema:
                     type: string
-                    example:  'no-cache'
+                    example: "no-cache"
                 - in: header
                   name: Accept
                   schema:
                     type: string
-                    example:  'application/json'
+                    example: "application/json"
                 - in: header
                   name: Content-Type
                   description: type of content
                   schema:
                     type: string
-                    example:  'application/json'
+                    example: "application/json"
                 - in: header
                   name: X-Signature
                   description: Response hashed with timestamp and signed with private key
@@ -118,7 +118,7 @@ paths:
                     schema:
                       $ref: "#/components/schemas/EnvelopedApplication"
               responses:
-                '200':
+                "200":
                   description: All good
 
   /api/v1/application/{id}:
@@ -230,7 +230,7 @@ components:
       description: The data to verify
       properties:
         fields:
-          $ref: '#/components/schemas/Fields'
+          $ref: "#/components/schemas/Fields"
         documents:
           type: array
           description: Documents for data extraction or cross-checking
@@ -260,14 +260,14 @@ components:
           type: array
           description: Documents for data extraction or cross-checking
           items:
-            $ref: '#/components/schemas/ResultDocument'
+            $ref: "#/components/schemas/ResultDocument"
         selfie:
           description: Media required for `face-matching`
           properties:
             files:
               type: array
               items:
-                $ref: '#/components/schemas/ResultFacesMedia'
+                $ref: "#/components/schemas/ResultFacesMedia"
           required:
             - files
           additionalProperties: false
@@ -290,7 +290,7 @@ components:
           content: Gerus
         - contentType: sex
           category: Gender
-          content: male
+          content: M
         - contentType: bool
           category: Agree on something
           content: "true"
@@ -338,12 +338,12 @@ components:
           pattern: ^[a-zA-Z]{2,3}$|unknown$
           example: JPN
         documentType:
-          $ref: '#/components/schemas/DocumentType'
+          $ref: "#/components/schemas/DocumentType"
         files:
           description: Temporary links to the document photos or scans
           type: array
           items:
-            $ref: '#/components/schemas/ResultDocumentMedia'
+            $ref: "#/components/schemas/ResultDocumentMedia"
         nfc:
           $ref: "#/components/schemas/NFCContent"
       required:
@@ -599,7 +599,7 @@ components:
               comment: data was extracted
         concerns:
           description: A summary of concern
-          type: array          
+          type: array
           items:
             type: object
             properties:
@@ -653,7 +653,7 @@ components:
           * `processing` - application is being processed
 
     SourceMetadata:
-      $ref: '#/components/schemas/BaseMetadata'
+      $ref: "#/components/schemas/BaseMetadata"
       additionalProperties: false
 
     BaseMetadata:
@@ -682,6 +682,10 @@ components:
           type: string
           description: The version of the client which sent the request
           example: 1.0.0
+        acVersion:
+          type: string
+          description: The version of the acceptor client which received the request
+          example: 1.0.0
         labels:
           type: object
           description: Custom key-value labels (maximum 30)
@@ -704,6 +708,14 @@ components:
           type: string
           description: user agent data retrieved from user's client which send app from sdk
           example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36
+        author:
+          type: string
+          description: username or email of author of the request
+          example: admin
+        disableCs:
+          type: boolean
+          description: allows to disable customer support check
+          example: true
       example:
         externalId: ID-2345
         platform: android
@@ -740,6 +752,10 @@ components:
           $ref: "#/components/schemas/CrossChecking"
         watchlists:
           $ref: "#/components/schemas/Watchlists"
+        docCheck:
+          $ref: "#/components/schemas/DocCheck"
+        profileCheck:
+          $ref: "#/components/schemas/ProfileCheck"
       additionalProperties: false
     FaceMatching:
       type: object
@@ -791,6 +807,8 @@ components:
             items:
               type: string
             example: [face-abc1, document-photo-qwe7]
+          selfieQuality:
+            $ref: "#/components/schemas/CheckList"
           score:
             description: faces similarity score
             type: number
@@ -932,6 +950,46 @@ components:
         - content
       additionalProperties: false
 
+    DocCheck:
+      type: object
+      properties:
+        comment:
+          type: string
+        verifier:
+          type: string
+        status:
+          $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
+        documentDataChecking:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentDataChecking"
+        documentPhotoQuality:
+          $ref: "#/components/schemas/CheckList"
+        dataExtractionConsistency:
+          $ref: "#/components/schemas/CheckList"
+
+    ProfileCheck:
+      type: object
+      properties:
+        comment:
+          type: string
+        verifier:
+          type: string
+        status:
+          $ref: "#/components/schemas/VerificationStatus"
+        processingState:
+          $ref: "#/components/schemas/ProcessingState"
+        formCompare:
+          $ref: "#/components/schemas/CheckList"
+        matchLocation:
+          $ref: "#/components/schemas/CheckList"
+        fieldChecking:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldChecking"
+
     CrossChecking:
       type: object
       properties:
@@ -976,6 +1034,22 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DocumentDataChecking"
+        documentPhotoQuality:
+          $ref: "#/components/schemas/CheckList"
+        originalDocumentPresence:
+          $ref: "#/components/schemas/CheckList"
+        documentQuality:
+          $ref: "#/components/schemas/CheckList"
+        fraudAssesment:
+          $ref: "#/components/schemas/CheckList"
+        formCompare:
+          $ref: "#/components/schemas/CheckList"
+        matchLocation:
+          $ref: "#/components/schemas/CheckList"
+        documentCompare:
+          $ref: "#/components/schemas/CheckList"
+        dataExtractionConsistency:
+          $ref: "#/components/schemas/CheckList"
       required:
         - status
       additionalProperties: false
@@ -993,6 +1067,11 @@ components:
           example: Joanna
         equal:
           type: boolean
+        status:
+          type:
+            $ref: "#/components/schemas/VerificationStatus"
+          description: Status of check data
+
         documentId:
           type: string
           description: ID of the document which extracted data is compared
@@ -1017,8 +1096,15 @@ components:
           type: string
         equal:
           type: boolean
+          nullable: true
+          description: Null means that check between fields on the document was not performed
         valid:
           type: boolean
+          description: Document field validation result (false means that value is incorrect)
+        status:
+          type:
+            $ref: "#/components/schemas/VerificationStatus"
+          description: Status of check data
         message:
           type: string
         documentId:
@@ -1051,6 +1137,8 @@ components:
             type: string
           description: Fields which were sent to watchlists service
           example: [First name, Last name, Date of birth]
+        summary:
+          $ref: "#/components/schemas/CheckList"
         records:
           type: array
           items:
@@ -1083,7 +1171,8 @@ components:
         If the list isn't provided, all verifications will be applied.
       items:
         type: string
-        enum: ["watchlists", "face-matching", "data-extraction", "cross-checking"]
+        enum:
+          ["watchlists", "face-matching", "data-extraction", "cross-checking"]
       example: ["watchlists", "face-matching", "data-extraction"]
 
     DocumentType:
@@ -1129,7 +1218,7 @@ components:
         schemaPath:
           type: string
           description: Ref to schema rule
-          example: '#/components/schemas/Application/properties/documents/items/properties/id/format'
+          example: "#/components/schemas/Application/properties/documents/items/properties/id/format"
         params:
           type: object
           example:
@@ -1142,7 +1231,7 @@ components:
       example:
         keyword: pattern
         dataPath: .application.documents[0].issuingCountry
-        schemaPath: '#/components/schemas/Application/properties/documents/items/properties/issuingCountry/pattern'
+        schemaPath: "#/components/schemas/Application/properties/documents/items/properties/issuingCountry/pattern"
         params:
           pattern: ^[a-zA-Z]{2,3}$
         message: should match pattern "^[a-zA-Z]{2,3}$"
@@ -1153,3 +1242,30 @@ components:
           type: string
           description: The raw (non-parsed) MRZ string pulled from the chip.
       required: [mrz]
+    CheckList:
+      type: object
+      properties:
+        group:
+          type: string
+        description:
+          type: string
+        considers:
+          type: array
+          items:
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              type:
+                type: string
+              status:
+                type: string
+            additionalProperties: false
+            required:
+              - name
+              - description
+      additionalProperties: false
+      required:
+        - group
+        - considers
