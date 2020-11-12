@@ -12,17 +12,14 @@ info:
     altText: GetID
 
   description: |
-
     # API
     Information about API
-
     # SDK
     GetID provides iOS, Android and Web SDKs to simplify user's data capturing.
     Links to the SDKs documentation and usage examples:
     - [Web](https://github.com/vvorld/getid-web-sdk)
     - [iOS](https://github.com/vvorld/getid-ios-sdk)
     - [Android](https://github.com/vvorld/getid-android-sdk)
-
 paths:
   /api/v1/application:
     post:
@@ -175,6 +172,171 @@ paths:
                     type: integer
                     enum: [404]
 
+  /api/v1/pdf/{id}:
+    get:
+      security:
+        - ApiKeyAuth: []
+      description: Get verified application in PDF format
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      summary: ''
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [401]
+                  errorMessage:
+                    type: string
+                    example: Unauthorized
+        "404":
+          description: Application not found
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [404]
+
+  /api/v1/applications-list:
+    get:
+      security:
+        - ApiKeyAuth: []
+      description: Get application list.
+      responses:
+        "200":
+          description: OK
+          content:
+            "application/json":
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApplicationListResponse"
+                  - properties:
+                      responseCode:
+                        type: integer
+                        description: contains HTTP code (200)
+                        enum: [200]
+                    required: [responseCode]
+
+        "401":
+          description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [401]
+                  errorMessage:
+                    type: string
+                    example: Unauthorized
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ApplicationListRequest"
+  /api/v1/translations:
+    security:
+      - ApiKeyAuth: []
+    post:
+      summary: 'Set dictionary for SDK'
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        "401":
+          description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [401]
+                  errorMessage:
+                    type: string
+                    example: Unauthorized
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/Dictionary"
+  '/api/v1/dictionary/{dictionaryName}':
+    delete:
+      security:
+        - ApiKeyAuth: []
+      summary: 'Delete dictionary by name'
+      parameters:
+        - in: path
+          name: dictionaryName
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        "401":
+          description: Missing or wrong authorization headers
+          headers:
+            WWW-Authenticate:
+              description: Authentication method that should be used to gain access to a resource
+              schema:
+                type: string
+              example: apiKey realm="Access to API"
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [401]
+                  errorMessage:
+                    type: string
+                    example: Unauthorized
+        "404":
+          description: Dictionary not found
+          content:
+            "application/json":
+              schema:
+                properties:
+                  responseCode:
+                    type: integer
+                    enum: [404]
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -185,6 +347,79 @@ components:
         You can find token on settings page.
         It's required for all API methods.
   schemas:
+    ApplicationListRequest:
+      type: object
+      properties:
+        startDate:
+          type: integer
+        endDate:
+          type: integer
+        statusFilter:
+          type: array
+          items:
+            type: string
+            enum:
+             - declined
+             - approved
+             - needs-review
+             - error
+             - pending
+        countryFilter:
+          type: array
+          items:
+            type: string
+            description: Alpha3 country code
+        docTypeFilter:
+          type: array
+          items:
+            type: string
+            enum:
+              - passport
+              - id-card
+              - driving-licence
+              - residence-permit
+              - voter-card
+              - unknown
+        platformFilter:
+          type: array
+          items:
+            type: string
+            enum:
+              - api
+              - web
+              - ios
+              - android
+        authorFilter:
+          type: array
+          description: array of userNames, available option "No author" - returns applications without author
+          items:
+            type: string
+        pageLimit:
+          type: integer
+        offset:
+          type: integer
+        idsOnly:
+          type: boolean
+      additionalProperties: false
+    ApplicationListResponse:
+      type: object
+      properties:
+        applicationsList:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationResult"
+        applicationsListIds:
+          type: array
+          items:
+            type: string
+        applicationsListTotalItems:
+          type: integer
+        responseCode:
+          type: integer
+      additionalProperties: false
+      required:
+        - applicationsListTotalItems
+        - responseCode
     EnvelopedApplication:
       type: object
       properties:
@@ -277,7 +512,6 @@ components:
       type: array
       description: |
         Data fields to check.
-
         For example: Last name and Date of birth sent from web form
       items:
         $ref: "#/components/schemas/Field"
@@ -370,7 +604,6 @@ components:
           type: string
           description: |
             Kind of data.
-
             For example: First name, Last name
           example: First name
         content:
@@ -391,7 +624,6 @@ components:
           type: string
           description: |
             Kind of data.
-
             For example: Date of birth
           example: Date of birth
         content:
@@ -443,7 +675,6 @@ components:
           type: string
           description: |
             Kind of data.
-
             For example: Country of birth
         content:
           type: string
@@ -484,9 +715,7 @@ components:
         uri:
           description: |
             Data URI of the media
-
             All common image formats are acceptable.
-
             Acceptable video formats: WebM + VP8, MP4 + AVC
           type: string
           format: media-data-uri
@@ -508,6 +737,9 @@ components:
         mediaType:
           type: string
           example: image/jpeg
+        kind:
+          type: string
+          example: front, back, single-page, selfie, selfie-video, video, nfc-face, selfieVideo, liveness-video, liveness-full-face
       required: [uri]
       additionalProperties: false
 
@@ -528,7 +760,6 @@ components:
         uri:
           description: |
             Data URI of the media
-
             All common image formats are acceptable.
           type: string
           format: media-data-uri
@@ -651,7 +882,6 @@ components:
         Application processing state:
           * `done` - processing is finished
           * `processing` - application is being processed
-
     SourceMetadata:
       $ref: "#/components/schemas/BaseMetadata"
       additionalProperties: false
@@ -744,8 +974,8 @@ components:
       properties:
         faceMatching:
           $ref: "#/components/schemas/FaceMatching"
-        #liveness:
-        #  $ref: "#/components/schemas/Liveness"
+        livenessCheck:
+          $ref: "#/components/schemas/livenessCheck"
         dataExtraction:
           $ref: "#/components/schemas/DataExtraction"
         crossChecking:
@@ -779,7 +1009,6 @@ components:
           type: object
           description: |
             Settings determining result status.
-
             If both threshold are equal, result status can only be `declined` or `approved`
           properties:
             declineThreshold:
@@ -817,7 +1046,7 @@ components:
           - score
           - files
         additionalProperties: false
-    Liveness:
+    livenessCheck:
       type: object
       properties:
         comment:
@@ -828,10 +1057,8 @@ components:
           $ref: "#/components/schemas/VerificationStatus"
         processingState:
           $ref: "#/components/schemas/ProcessingState"
-        results:
-          type: array
-          items:
-            $ref: "#/components/schemas/LivenessResult"
+        livenessCheck:
+            $ref: "#/components/schemas/CheckList"
       required:
         - status
       additionalProperties: false
@@ -944,6 +1171,10 @@ components:
           type: string
           description: The locale of the extracted value
           example: en_UK
+        extractedFormat:
+          type: string
+          description: The format of extracted date, applicable if date presented not in default format YYYY-MM-DD
+          example: YYYY-MM
       required:
         - contentType
         - category
@@ -1007,7 +1238,6 @@ components:
             $ref: "#/components/schemas/FieldChecking"
           description: |
             Contains the list of checked fields
-
             If the value corresponding to the field wasn't extracted, such case also would be added to the list
           example:
             - category: First name
@@ -1167,7 +1397,6 @@ components:
         * face-matching - compare photo on the document with selfie (selfie list and document list must be provided)
         * data-extraction - extract data from the documents (documents must be provided)
         * cross-checking - check the conformity between fields and extracted data
-
         If the list isn't provided, all verifications will be applied.
       items:
         type: string
@@ -1183,6 +1412,7 @@ components:
         - id-card
         - driving-licence
         - residence-permit
+        - voter-card
         - unknown
       example: id-card
     Comment:
@@ -1209,7 +1439,6 @@ components:
           type: string
           description: |
             Means what kind of validation was failed
-
             For example: required, type, format, pattern
         dataPath:
           type: string
@@ -1269,3 +1498,57 @@ components:
       required:
         - group
         - considers
+    Dictionary:
+      type: object
+      properties:
+        dictionary:
+          description: Key - value pairs for translations
+          type: object
+          example:
+            { EN:{
+              "Form_header": "Form header",
+               "IdSelfie_header": "Selfie header",
+               "CountryAndDocument_header": "Choose document",
+               "IdCapture_header": "Document front photo",
+               "IdCaptureBack_header": "Document back photo",
+               "ThankYou_header": "Thank you",
+               "isFail_header": "Cannot send data",
+               "Form_subHeader": "Please provide personal details.",
+               "IdSelfie_subHeader": "Please place your face inside the oval.",
+               "IdCapture_subHeader": "Please place the document inside the frame.",
+               "IdCaptureBack_subHeader": "Please place the document inside the frame.",
+               "CountryAndDocument_subHeader": "Document issuing country and its type.",
+               "ThankYou_subHeader": "The identification process is complete.",
+               "isFail_subHeader": "Error occurs when you try to send data to the server.",
+               "CountryAndDocument_country-placeholder": "Choose country",
+               "button_next": "next",
+               "button_back": "back",
+               "button_submit": "submit",
+               "button_retake": "retake",
+               "button_agree": "I agree",
+               "button_start_over": "start over",
+               "choose_flow_button": "Choose Flow",
+               "retry_button": "Retry",
+               "cancel_button": "Cancel",
+               "exists_header": "Application already exists.",
+               "exists_subHeader": "Please contact your provider for further information.",
+               "done_button": "Done",
+               "file_input_tooltip": "Allowed formats: jpg, png, pdf.",
+               "button_make_photo": "make photo",
+               "photo_tip": "Please use <b>Spacebar</b> key to make photo",
+               "consent": "I have read and understand or I have read and understood Privacy policy",
+               "error_header": "Something was wrong",
+               "error_subHeader": "Please contact your provider for further information.",
+               "camera_error_not_found": "No available devices were found",
+               "camera_error_generic": "To make a photo you need to give access for webcam"
+              }
+            }
+          additionalProperties:
+            type: object
+            description: Dictionary with uniq _lang_key_.
+            additionalProperties:
+              type: string
+              description: Pairs stringKey -> traslation string.
+      additionalProperties: false
+      required:
+        - dictionary
