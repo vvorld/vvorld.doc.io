@@ -183,6 +183,169 @@
         }
       }
     },
+    "/api/v2/application": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Send an application v2 for verification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvelopedApplicationV2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        200
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "format": "object-id",
+                      "example": "5e62110968e3fb4d655756d1"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ValidationError"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or wrong authorization headers",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "Authentication method that should be used to gain access to a resource",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "apiKey realm=\"Access to API\""
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "callbacks": {
+          "onOrderedCallback": {
+            "custom predefined by client webhook url": {
+              "post": {
+                "parameters": [
+                  {
+                    "in": "header",
+                    "name": "Cache-Control",
+                    "description": "instructions for caching",
+                    "schema": {
+                      "type": "string",
+                      "example": "no-cache"
+                    }
+                  },
+                  {
+                    "in": "header",
+                    "name": "Accept",
+                    "schema": {
+                      "type": "string",
+                      "example": "application/json"
+                    }
+                  },
+                  {
+                    "in": "header",
+                    "name": "Content-Type",
+                    "description": "type of content",
+                    "schema": {
+                      "type": "string",
+                      "example": "application/json"
+                    }
+                  },
+                  {
+                    "in": "header",
+                    "name": "X-Signature",
+                    "description": "Response hashed with timestamp and signed with private key",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "in": "header",
+                    "name": "X-Timestamp",
+                    "description": "Timestamp (moment of signing)",
+                    "schema": {
+                      "type": "number",
+                      "format": "unix timestamp"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/VerificationResultV2"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "All good"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/application/{id}": {
       "get": {
         "security": [
@@ -280,6 +443,103 @@
         }
       }
     },
+    "/api/v2/application/{id}": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Get verified application v2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/VerificationResultV2"
+                    },
+                    {
+                      "properties": {
+                        "responseCode": {
+                          "type": "integer",
+                          "description": "contains HTTP code (200)",
+                          "enum": [
+                            200
+                          ]
+                        }
+                      },
+                      "required": [
+                        "responseCode"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or wrong authorization headers",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "Authentication method that should be used to gain access to a resource",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "apiKey realm=\"Access to API\""
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Application not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        404
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pdf/{id}": {
       "get": {
         "security": [
@@ -298,7 +558,6 @@
             }
           }
         ],
-        "summary": "",
         "responses": {
           "200": {
             "description": "successful operation",
@@ -369,6 +628,41 @@
           }
         ],
         "description": "Get application list.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/startDate"
+          },
+          {
+            "$ref": "#/components/parameters/endDate"
+          },
+          {
+            "$ref": "#/components/parameters/statusFilter"
+          },
+          {
+            "$ref": "#/components/parameters/countryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/docTypeFilter"
+          },
+          {
+            "$ref": "#/components/parameters/platformFilter"
+          },
+          {
+            "$ref": "#/components/parameters/authorFilter"
+          },
+          {
+            "$ref": "#/components/parameters/flowFilter"
+          },
+          {
+            "$ref": "#/components/parameters/pageLimit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/idsOnly"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -440,14 +734,186 @@
         }
       }
     },
-    "/api/v1/translations": {
-      "security": [
-        {
-          "ApiKeyAuth": []
+    "/api/v2/applications-list": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Get application list v2.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/startDate"
+          },
+          {
+            "$ref": "#/components/parameters/endDate"
+          },
+          {
+            "$ref": "#/components/parameters/statusFilter"
+          },
+          {
+            "$ref": "#/components/parameters/countryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/docTypeFilter"
+          },
+          {
+            "$ref": "#/components/parameters/platformFilter"
+          },
+          {
+            "$ref": "#/components/parameters/authorFilter"
+          },
+          {
+            "$ref": "#/components/parameters/pageLimit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/idsOnly"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApplicationListResponseV2"
+                    },
+                    {
+                      "properties": {
+                        "responseCode": {
+                          "type": "integer",
+                          "description": "contains HTTP code (200)",
+                          "enum": [
+                            200
+                          ]
+                        }
+                      },
+                      "required": [
+                        "responseCode"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or wrong authorization headers",
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "Authentication method that should be used to gain access to a resource",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "apiKey realm=\"Access to API\""
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "responseCode": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
-      ],
+      }
+    },
+    "/api/v1/tokenized-url": {
       "post": {
-        "summary": "Set dictionary for SDK",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "get url with token to get one-time verification page",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "description": "name of flow",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "externalId",
+            "description": "unique id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "flow url"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SdkConfig"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/translations": {
+      "get": {
+        "summary": "Set all custom translations for SDK",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dictionaries"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Uploads a dictionary for SDK",
         "responses": {
           "200": {
             "description": "successful operation",
@@ -488,25 +954,33 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Dictionary"
+                "$ref": "#/components/schemas/Dictionaries"
               }
             }
           }
         }
       }
     },
-    "/api/v1/dictionary/{dictionaryName}": {
+    "/api/v1/translations/{dictionary}/{locale}": {
       "delete": {
         "security": [
           {
             "ApiKeyAuth": []
           }
         ],
-        "summary": "Delete dictionary by name",
+        "summary": "Delete dictionary by dictionary and locale",
         "parameters": [
           {
             "in": "path",
-            "name": "dictionaryName",
+            "name": "dictionary",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "locale",
             "required": true,
             "schema": {
               "type": "string"
@@ -578,6 +1052,128 @@
         "description": "You can find token on settings page.\nIt's required for all API methods.\n"
       }
     },
+    "parameters": {
+      "startDate": {
+        "name": "startDate",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "endDate": {
+        "name": "endDate",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "statusFilter": {
+        "name": "statusFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "declined",
+              "approved",
+              "needs-review",
+              "error",
+              "pending"
+            ]
+          }
+        }
+      },
+      "countryFilter": {
+        "name": "countryFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Alpha3 country code"
+          }
+        }
+      },
+      "docTypeFilter": {
+        "name": "docTypeFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "passport",
+              "id-card",
+              "driving-licence",
+              "residence-permit",
+              "voter-card",
+              "tax-card",
+              "unknown"
+            ]
+          }
+        }
+      },
+      "platformFilter": {
+        "name": "platformFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "api",
+              "web",
+              "ios",
+              "android"
+            ]
+          }
+        }
+      },
+      "authorFilter": {
+        "name": "authorFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "description": "array of userNames, available option \"No author\" - returns applications without author",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "flowFilter": {
+        "name": "flowFilter",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "description": "array of verification flows",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "pageLimit": {
+        "name": "pageLimit",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "idsOnly": {
+        "name": "idsOnly",
+        "in": "query",
+        "schema": {
+          "type": "boolean"
+        }
+      }
+    },
     "schemas": {
       "ApplicationListRequest": {
         "type": "object",
@@ -591,52 +1187,29 @@
           "statusFilter": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "declined",
-                "approved",
-                "needs-review",
-                "error",
-                "pending"
-              ]
+              "type": "string"
             }
           },
           "countryFilter": {
             "type": "array",
             "items": {
-              "type": "string",
-              "description": "Alpha3 country code"
+              "type": "string"
             }
           },
           "docTypeFilter": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "passport",
-                "id-card",
-                "driving-licence",
-                "residence-permit",
-                "voter-card",
-                "unknown"
-              ]
+              "type": "string"
             }
           },
           "platformFilter": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "api",
-                "web",
-                "ios",
-                "android"
-              ]
+              "type": "string"
             }
           },
           "authorFilter": {
             "type": "array",
-            "description": "array of userNames, available option \"No author\" - returns applications without author",
             "items": {
               "type": "string"
             }
@@ -675,11 +1248,39 @@
             "type": "integer"
           }
         },
-        "additionalProperties": false,
         "required": [
           "applicationsListTotalItems",
           "responseCode"
-        ]
+        ],
+        "additionalProperties": false
+      },
+      "ApplicationListResponseV2": {
+        "type": "object",
+        "properties": {
+          "applicationsList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerificationResultV2"
+            }
+          },
+          "applicationsListIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicationsListTotalItems": {
+            "type": "integer"
+          },
+          "responseCode": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "applicationsListTotalItems",
+          "responseCode"
+        ],
+        "additionalProperties": false
       },
       "EnvelopedApplication": {
         "type": "object",
@@ -689,6 +1290,24 @@
           },
           "application": {
             "$ref": "#/components/schemas/Application"
+          },
+          "verificationTypes": {
+            "$ref": "#/components/schemas/VerificationTypes"
+          }
+        },
+        "required": [
+          "application"
+        ],
+        "additionalProperties": false
+      },
+      "EnvelopedApplicationV2": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          },
+          "application": {
+            "$ref": "#/components/schemas/ApplicationV2"
           },
           "verificationTypes": {
             "$ref": "#/components/schemas/VerificationTypes"
@@ -737,6 +1356,51 @@
           "processingState"
         ]
       },
+      "VerificationResultV2": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Application id",
+            "format": "object-id",
+            "example": "5e62110968e3fb4d655756d1"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ResultMetadata"
+          },
+          "application": {
+            "$ref": "#/components/schemas/ResultApplicationV2"
+          },
+          "verificationTypes": {
+            "$ref": "#/components/schemas/VerificationTypes"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SummaryResult"
+          },
+          "servicesResults": {
+            "$ref": "#/components/schemas/ServiceResultsV2"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/Comment"
+          },
+          "additionalFiles": {
+            "type": "array",
+            "description": "Additional files that aren't involved in any check.",
+            "items": {
+              "$ref": "#/components/schemas/AdditionalFileMedia"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "metadata",
+          "application",
+          "processingState"
+        ]
+      },
       "Application": {
         "type": "object",
         "description": "The data to verify",
@@ -769,12 +1433,43 @@
         },
         "additionalProperties": false
       },
+      "ApplicationV2": {
+        "type": "object",
+        "description": "The data to verify",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "document": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "selfie": {
+            "description": "Media required for `face-matching`",
+            "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FacesMedia"
+                }
+              }
+            },
+            "required": [
+              "files"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
       "ResultApplication": {
         "type": "object",
         "description": "The data to verify",
         "properties": {
           "fields": {
-            "type": "array"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Fields"
+            }
           },
           "documents": {
             "type": "array",
@@ -801,6 +1496,31 @@
         },
         "additionalProperties": false
       },
+      "ResultApplicationV2": {
+        "type": "object",
+        "description": "The data to verify",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "document": {
+            "$ref": "#/components/schemas/ResultDocument"
+          },
+          "selfie": {
+            "description": "Media required for `face-matching`",
+            "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ResultFacesMedia"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
       "Fields": {
         "type": "array",
         "description": "Data fields to check.\nFor example: Last name and Date of birth sent from web form\n",
@@ -809,26 +1529,84 @@
         },
         "example": [
           {
-            "contentType": "string",
             "category": "First name",
-            "content": "Artem"
+            "content": "John",
+            "contentType": "string"
           },
           {
-            "contentType": "string",
             "category": "Last name",
-            "content": "Gerus"
+            "content": "Doe",
+            "contentType": "string"
           },
           {
-            "contentType": "sex",
             "category": "Gender",
-            "content": "M"
+            "content": "male",
+            "contentType": "sex"
           },
           {
-            "contentType": "bool",
             "category": "Agree on something",
-            "content": "true"
+            "content": "true",
+            "contentType": "bool"
           }
         ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/FieldsV2"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "additionalProperties": false
+      },
+      "FieldsV2": {
+        "type": "array",
+        "description": "Data fields to check.\nFor example: Last name and Date of birth sent from web form\n",
+        "items": {
+          "$ref": "#/components/schemas/FieldV2"
+        },
+        "example": [
+          {
+            "category": "First name",
+            "content": "John"
+          },
+          {
+            "category": "Last name",
+            "content": "Doe"
+          },
+          {
+            "category": "Gender",
+            "content": "male"
+          },
+          {
+            "category": "Nationality",
+            "content": "JPN"
+          }
+        ]
+      },
+      "FieldV2": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Kind of data.\nFor example: First name, Last name, Date of birth, Gender\n",
+            "example": "First name"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The field value. It must be compliant with the category's format.\nThe gender field can take only two values: male, female\nDates must be in YYYY-MM-DD format\nCountry fields must be in [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements) format\nOther fields are plain strings\n",
+            "example": "John"
+          }
+        },
+        "required": [
+          "category",
+          "content"
+        ],
+        "additionalProperties": false
       },
       "Document": {
         "type": "object",
@@ -896,191 +1674,33 @@
       },
       "Field": {
         "type": "object",
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/StringField"
-          },
-          {
-            "$ref": "#/components/schemas/DateField"
-          },
-          {
-            "$ref": "#/components/schemas/SexField"
-          },
-          {
-            "$ref": "#/components/schemas/BoolField"
-          },
-          {
-            "$ref": "#/components/schemas/CountryField"
-          },
-          {
-            "$ref": "#/components/schemas/NumberField"
-          }
-        ]
-      },
-      "StringField": {
-        "type": "object",
         "properties": {
-          "contentType": {
-            "type": "string",
-            "enum": [
-              "string"
-            ]
-          },
           "category": {
             "type": "string",
-            "description": "Kind of data.\nFor example: First name, Last name\n",
+            "description": "Kind of data.\nFor example: First name, Last name, Date of birth, Gender\n",
             "example": "First name"
           },
           "content": {
             "type": "string",
             "minLength": 1,
-            "description": "The string value",
+            "description": "The field value. It must be compliant with the category's format.\nThe gender field can take only two values: male, female\nDates must be in YYYY-MM-DD format\nCountry fields must be in [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements) format\nOther fields are plain strings\n",
             "example": "John"
-          }
-        },
-        "required": [
-          "contentType",
-          "category",
-          "content"
-        ],
-        "additionalProperties": false
-      },
-      "DateField": {
-        "type": "object",
-        "properties": {
+          },
           "contentType": {
             "type": "string",
+            "description": "Deprecated",
             "enum": [
-              "date"
-            ]
-          },
-          "category": {
-            "type": "string",
-            "description": "Kind of data.\nFor example: Date of birth\n",
-            "example": "Date of birth"
-          },
-          "content": {
-            "format": "date",
-            "type": "string",
-            "description": "Date in YYYY-MM-DD format",
-            "example": "1996-12-31"
-          }
-        },
-        "required": [
-          "contentType",
-          "category",
-          "content"
-        ],
-        "additionalProperties": false
-      },
-      "SexField": {
-        "type": "object",
-        "properties": {
-          "contentType": {
-            "type": "string",
-            "enum": [
-              "sex"
-            ]
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "Gender"
-            ]
-          },
-          "content": {
-            "type": "string",
-            "enum": [
-              "male",
-              "female"
+              "string",
+              "number",
+              "sex",
+              "date",
+              "country",
+              "bool",
+              "boolean"
             ]
           }
         },
         "required": [
-          "contentType",
-          "category",
-          "content"
-        ],
-        "additionalProperties": false
-      },
-      "NumberField": {
-        "type": "object",
-        "properties": {
-          "contentType": {
-            "type": "string",
-            "enum": [
-              "number"
-            ]
-          },
-          "category": {
-            "type": "string",
-            "description": "Kind of data."
-          },
-          "content": {
-            "type": "string",
-            "pattern": "^[0-9]+$",
-            "description": "The number value"
-          }
-        },
-        "required": [
-          "contentType",
-          "category",
-          "content"
-        ],
-        "additionalProperties": false
-      },
-      "CountryField": {
-        "type": "object",
-        "properties": {
-          "contentType": {
-            "type": "string",
-            "enum": [
-              "country"
-            ]
-          },
-          "category": {
-            "type": "string",
-            "description": "Kind of data.\nFor example: Country of birth\n"
-          },
-          "content": {
-            "type": "string",
-            "description": "The country code\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
-            "pattern": "^[a-zA-Z]{2,3}$",
-            "example": "JPN"
-          }
-        },
-        "required": [
-          "contentType",
-          "category",
-          "content"
-        ],
-        "additionalProperties": false
-      },
-      "BoolField": {
-        "type": "object",
-        "properties": {
-          "contentType": {
-            "type": "string",
-            "enum": [
-              "bool"
-            ]
-          },
-          "category": {
-            "type": "string",
-            "description": "Kind of data."
-          },
-          "content": {
-            "enum": [
-              "true",
-              "false"
-            ],
-            "type": "string",
-            "description": "The bool value",
-            "example": "true"
-          }
-        },
-        "required": [
-          "contentType",
           "category",
           "content"
         ],
@@ -1098,6 +1718,10 @@
             "type": "string",
             "format": "media-data-uri",
             "example": "data:video/webm;base64,aGVsbG8="
+          },
+          "kind": {
+            "type": "string",
+            "example": "selfie, selfie-video, video, nfc-face, selfieVideo, liveness-video, liveness-full-face"
           }
         },
         "required": [
@@ -1135,10 +1759,6 @@
       "DocumentMedia": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "file id (filled automatically when missing)"
-          },
           "kind": {
             "type": "string",
             "description": "kind of document page",
@@ -1149,16 +1769,53 @@
             ],
             "example": "front"
           },
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
           "uri": {
             "description": "Data URI of the media\nAll common image formats are acceptable.\n",
             "type": "string",
             "format": "media-data-uri",
             "example": "data:image/png;base64,aGVsbG8="
+          },
+          "size": {
+            "type": "integer",
+            "description": "size of document in bytes"
           }
         },
         "required": [
-          "uri",
-          "kind"
+          "kind",
+          "uri"
+        ],
+        "additionalProperties": false
+      },
+      "AdditionalFileMedia": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind of the file. Should be in kebab-case.",
+            "example": "trade-reference"
+          },
+          "id": {
+            "type": "string",
+            "description": "file id (filled automatically when missing)"
+          },
+          "uri": {
+            "description": "Data URI of the media\nAll common image formats are acceptable.\n",
+            "type": "string",
+            "format": "media-data-uri",
+            "example": "data:image/png;base64,aGVsbG8="
+          },
+          "size": {
+            "type": "integer"
+          }
+        },
+        "description": "size of document in bytes",
+        "required": [
+          "kind",
+          "uri"
         ],
         "additionalProperties": false
       },
@@ -1204,8 +1861,14 @@
         "description": "Summary verification result (omitted if state is `processing`)",
         "properties": {
           "status": {
-            "description": "The worst result from all services",
-            "$ref": "#/components/schemas/VerificationStatus"
+            "allOf": [
+              {
+                "description": "The worst result from all services"
+              },
+              {
+                "$ref": "#/components/schemas/VerificationStatus"
+              }
+            ]
           },
           "comments": {
             "type": "array",
@@ -1292,14 +1955,78 @@
           "validationDate"
         ]
       },
+      "SummaryResult": {
+        "type": "object",
+        "description": "Summary verification result (omitted if state is `processing`)",
+        "properties": {
+          "status": {
+            "description": "The worst result from all services",
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "document": {
+            "$ref": "#/components/schemas/ResultDocument"
+          },
+          "concerns": {
+            "description": "A summary of concern",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "service": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            },
+            "example": [
+              {
+                "service": "face-matching",
+                "status": "declined",
+                "comment": "photo is not a selfie"
+              },
+              {
+                "service": "doc-check",
+                "status": "needs-review",
+                "comment": "Extracted last name doesn't match data from the profile"
+              }
+            ]
+          },
+          "validationDate": {
+            "type": "string",
+            "description": "The date of validation completion",
+            "format": "date-time",
+            "example": "2020-03-17T20:28:37.061Z"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "validationDate"
+        ]
+      },
       "VerificationStatus": {
         "type": "string",
-        "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to any facts defined as critical in settings\n* `needs-review` - some facts are defined as considered in settings\n* `error` - error was occured (wrong or missing input data; service error)\n",
+        "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - application is declined due to any facts defined as critical in settings\n* `needs-review` - some facts are defined as considered in settings\n* `error` - error was occurred (wrong or missing input data; service error)\n",
         "enum": [
           "declined",
           "approved",
           "needs-review",
           "error"
+        ]
+      },
+      "BreakdownStatus": {
+        "type": "string",
+        "description": "Breakdown status:\n* `approved` - check is succeed\n* `declined` - check is failed\n* `needs-review` - check is failed, manual review is needed\n* `disabled` - check is disabled\n",
+        "enum": [
+          "declined",
+          "approved",
+          "needs-review",
+          "disabled"
         ]
       },
       "ProcessingState": {
@@ -1311,8 +2038,11 @@
         "description": "Application processing state:\n  * `done` - processing is finished\n  * `processing` - application is being processed\n"
       },
       "SourceMetadata": {
-        "$ref": "#/components/schemas/BaseMetadata",
-        "additionalProperties": false
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseMetadata"
+          }
+        ]
       },
       "BaseMetadata": {
         "type": "object",
@@ -1347,14 +2077,6 @@
             "description": "The version of the acceptor client which received the request",
             "example": "1.0.0"
           },
-          "labels": {
-            "type": "object",
-            "description": "Custom key-value labels (maximum 30)",
-            "maxProperties": 30,
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
           "ipAddress": {
             "type": "string",
             "description": "IP from which the request was sent",
@@ -1384,6 +2106,14 @@
             "type": "boolean",
             "description": "allows to disable customer support check",
             "example": true
+          },
+          "labels": {
+            "type": "object",
+            "description": "Custom key-value labels (maximum 30)",
+            "maxProperties": 30,
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "example": {
@@ -1419,6 +2149,27 @@
             }
           }
         ]
+      },
+      "ServiceResultsV2": {
+        "type": "object",
+        "properties": {
+          "faceMatching": {
+            "$ref": "#/components/schemas/FaceMatchingV2"
+          },
+          "livenessCheck": {
+            "$ref": "#/components/schemas/livenessCheck"
+          },
+          "watchlists": {
+            "$ref": "#/components/schemas/Watchlists"
+          },
+          "docCheck": {
+            "$ref": "#/components/schemas/DocCheckV2"
+          },
+          "profileCheck": {
+            "$ref": "#/components/schemas/ProfileCheckV2"
+          }
+        },
+        "additionalProperties": false
       },
       "ServiceResults": {
         "type": "object",
@@ -1492,16 +2243,42 @@
         ],
         "additionalProperties": false
       },
+      "FaceMatchingV2": {
+        "type": "object",
+        "description": "Face-matching service compares photo on the document with selfie",
+        "properties": {
+          "comment": {
+            "description": "Short comment about the result",
+            "type": "string",
+            "example": "Faces are not similar"
+          },
+          "verifier": {
+            "description": "Name of the verifier",
+            "type": "string",
+            "example": "Facemelter"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false
+      },
       "FaceMatchingResult": {
         "type": "array",
         "description": "Result of face matching service",
         "items": {
           "properties": {
             "files": {
-              "description": "two file ids which were involved in checking",
+              "description": "file ids which were involved in checking",
               "type": "array",
-              "minItems": 2,
-              "maxItems": 2,
+              "minItems": 0,
+              "maxItems": 3,
               "uniqueItems": true,
               "items": {
                 "type": "string"
@@ -1570,57 +2347,7 @@
             "$ref": "#/components/schemas/ProcessingState"
           },
           "extracted": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "documentId": {
-                  "type": "string",
-                  "description": "ID of the document which data was extracted"
-                },
-                "ocr": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DataExtractionResult"
-                  }
-                },
-                "mrz": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DataExtractionResult"
-                  }
-                },
-                "nfc": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DataExtractionResult"
-                  }
-                },
-                "images": {
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "kind": {
-                        "type": "string",
-                        "example": "portrait"
-                      },
-                      "uri": {
-                        "description": "Temporary link to the media",
-                        "type": "string",
-                        "format": "uri",
-                        "example": "https://some.site/image.jpeg?t=123"
-                      }
-                    },
-                    "additionalProperties": false,
-                    "required": [
-                      "kind",
-                      "uri"
-                    ]
-                  }
-                }
-              },
-              "additionalProperties": false
-            }
+            "$ref": "#/components/schemas/Extracted"
           }
         },
         "required": [
@@ -1718,6 +2445,9 @@
             "type": "string",
             "description": "The format of extracted date, applicable if date presented not in default format YYYY-MM-DD",
             "example": "YYYY-MM"
+          },
+          "valid": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -1756,6 +2486,117 @@
           }
         }
       },
+      "DocCheckV2": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "documentPhotoQuality": {
+            "$ref": "#/components/schemas/CheckList"
+          },
+          "dataExtractionConsistency": {
+            "$ref": "#/components/schemas/CheckList"
+          },
+          "extracted": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentDataChecking"
+                }
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "example": "portrait"
+                    },
+                    "uri": {
+                      "description": "Temporary link to the media",
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://some.site/image.jpeg?t=123"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "uri"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "Extracted": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "documentId": {
+              "type": "string",
+              "description": "ID of the document which data was extracted"
+            },
+            "ocr": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/DataExtractionResult"
+              }
+            },
+            "mrz": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/DataExtractionResult"
+              }
+            },
+            "nfc": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/DataExtractionResult"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "example": "portrait"
+                  },
+                  "uri": {
+                    "description": "Temporary link to the media",
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://some.site/image.jpeg?t=123"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "uri"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "ProfileCheck": {
         "type": "object",
         "properties": {
@@ -1784,6 +2625,36 @@
             }
           }
         }
+      },
+      "ProfileCheckV2": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "verifier": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "processingState": {
+            "$ref": "#/components/schemas/ProcessingState"
+          },
+          "formCompare": {
+            "$ref": "#/components/schemas/CheckList"
+          },
+          "matchLocation": {
+            "$ref": "#/components/schemas/CheckList"
+          },
+          "fieldChecking": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldCheckingV2"
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "CrossChecking": {
         "type": "object",
@@ -1892,10 +2763,14 @@
             "type": "boolean"
           },
           "status": {
-            "type": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "description": "Status of check data"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BreakdownStatus"
+              },
+              {
+                "description": "Status of data check"
+              }
+            ]
           },
           "documentId": {
             "type": "string",
@@ -1907,6 +2782,40 @@
           "field",
           "extracted",
           "equal"
+        ],
+        "additionalProperties": false
+      },
+      "FieldCheckingV2": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "example": "First name"
+          },
+          "field": {
+            "type": "string",
+            "example": "John"
+          },
+          "extracted": {
+            "type": "string",
+            "example": "Joanna"
+          },
+          "matchWithDocument": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BreakdownStatus"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "ID of the document which extracted data is compared"
+          }
+        },
+        "required": [
+          "category",
+          "field",
+          "extracted",
+          "matchWithDocument"
         ],
         "additionalProperties": false
       },
@@ -1936,10 +2845,14 @@
             "description": "Document field validation result (false means that value is incorrect)"
           },
           "status": {
-            "type": {
-              "$ref": "#/components/schemas/VerificationStatus"
-            },
-            "description": "Status of check data"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BreakdownStatus"
+              },
+              {
+                "description": "Status of check data"
+              }
+            ]
           },
           "message": {
             "type": "string"
@@ -2028,7 +2941,8 @@
             "watchlists",
             "face-matching",
             "data-extraction",
-            "cross-checking"
+            "cross-checking",
+            "liveness"
           ]
         },
         "example": [
@@ -2046,6 +2960,7 @@
           "driving-licence",
           "residence-permit",
           "voter-card",
+          "tax-card",
           "unknown"
         ],
         "example": "id-card"
@@ -2056,12 +2971,12 @@
         "properties": {
           "text": {
             "type": "string",
-            "description": "Text of comment",
-            "example": ""
+            "description": "Comment text",
+            "example": "Everything's OK"
           },
           "author": {
             "type": "string",
-            "description": "Login of user who save comment",
+            "description": "Author's login",
             "example": "admin"
           },
           "createdAt": {
@@ -2164,65 +3079,102 @@
           "considers"
         ]
       },
-      "Dictionary": {
+      "SdkConfig": {
         "type": "object",
         "properties": {
-          "dictionary": {
-            "description": "Key - value pairs for translations",
+          "locale": {
+            "type": "string",
+            "description": "Predefine locale",
+            "example": "de"
+          },
+          "profile": {
             "type": "object",
-            "example": {
-              "EN": {
-                "Form_header": "Form header",
-                "IdSelfie_header": "Selfie header",
-                "CountryAndDocument_header": "Choose document",
-                "IdCapture_header": "Document front photo",
-                "IdCaptureBack_header": "Document back photo",
-                "ThankYou_header": "Thank you",
-                "isFail_header": "Cannot send data",
-                "Form_subHeader": "Please provide personal details.",
-                "IdSelfie_subHeader": "Please place your face inside the oval.",
-                "IdCapture_subHeader": "Please place the document inside the frame.",
-                "IdCaptureBack_subHeader": "Please place the document inside the frame.",
-                "CountryAndDocument_subHeader": "Document issuing country and its type.",
-                "ThankYou_subHeader": "The identification process is complete.",
-                "isFail_subHeader": "Error occurs when you try to send data to the server.",
-                "CountryAndDocument_country-placeholder": "Choose country",
-                "button_next": "next",
-                "button_back": "back",
-                "button_submit": "submit",
-                "button_retake": "retake",
-                "button_agree": "I agree",
-                "button_start_over": "start over",
-                "choose_flow_button": "Choose Flow",
-                "retry_button": "Retry",
-                "cancel_button": "Cancel",
-                "exists_header": "Application already exists.",
-                "exists_subHeader": "Please contact your provider for further information.",
-                "done_button": "Done",
-                "file_input_tooltip": "Allowed formats: jpg, png, pdf.",
-                "button_make_photo": "make photo",
-                "photo_tip": "Please use <b>Spacebar</b> key to make photo",
-                "consent": "I have read and understand or I have read and understood Privacy policy",
-                "error_header": "Something was wrong",
-                "error_subHeader": "Please contact your provider for further information.",
-                "camera_error_not_found": "No available devices were found",
-                "camera_error_generic": "To make a photo you need to give access for webcam"
-              }
-            },
-            "additionalProperties": {
-              "type": "object",
-              "description": "Dictionary with uniq _lang_key_.",
-              "additionalProperties": {
+            "description": "Pre-fill Form fields according SDK configuration"
+          },
+          "redirects": {
+            "type": "object",
+            "description": "Specify url to redirect",
+            "properties": {
+              "onComplete": {
                 "type": "string",
-                "description": "Pairs stringKey -> traslation string."
+                "description": "redirect after Complete event",
+                "example": "https://google.com"
+              },
+              "onFail": {
+                "type": "string",
+                "description": "redirect after Fail event",
+                "example": "https://google.com"
               }
             }
           }
+        }
+      },
+      "Dictionaries": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "It is the string which will be viewed in the translation list"
+            },
+            "dictionary": {
+              "type": "string",
+              "description": "Name of custom dictionary (You should use this name in SDK config)"
+            },
+            "locale": {
+              "type": "string",
+              "description": "locale"
+            },
+            "default": {
+              "type": "boolean",
+              "description": "use this translation by default"
+            },
+            "items": {
+              "properties": {
+                "dictionaries": {
+                  "description": "Key - value pairs for translations",
+                  "type": "object"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "label",
+            "dictionary",
+            "locale",
+            "items"
+          ]
         },
-        "additionalProperties": false,
-        "required": [
-          "dictionary"
-        ]
+        "example": {
+          "dictionaries": [
+            {
+              "locale": "en",
+              "label": "English",
+              "dictionary": "custom",
+              "default": true,
+              "items": {
+                "CountryAndDocument_header": "Choose document type",
+                "CountryAndDocument_subHeader": "Carefully choose document type of document you want to provide for identification",
+                "CountryAndDocument_next": "Go next",
+                "CountryAndDocument_back": "Go back",
+                "CountryAndDocument_countryPlaceholder": "Choose country"
+              }
+            },
+            {
+              "locale": "ru",
+              "label": "Русский",
+              "dictionary": "custom",
+              "items": {
+                "CountryAndDocument_header": "Выберите тип документа",
+                "CountryAndDocument_subHeader": "Внимательно выберите тип документа для прохождения идентификации",
+                "CountryAndDocument_next": "Дальше",
+                "CountryAndDocument_back": "Назад",
+                "CountryAndDocument_countryPlaceholder": "Выберите страну"
+              }
+            }
+          ]
+        }
       }
     }
   }
