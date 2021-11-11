@@ -33,6 +33,10 @@ tags:
     x-displayName: "Translations"
   - name: "Token"
     x-displayName: "Tokens"
+    description: |
+      One can create a token to avoid using the API key in requests.
+      The API key have full access to all methods and data.
+      So using tokens with limited access is preferable for security reasons.
   - name: "One-time link"
     x-displayName: "One-time links"
   - name: "ApplicationToVerify"
@@ -106,7 +110,7 @@ paths:
               parameters:
                 - in: header
                   name: Cache-Control
-                  description: instructions for caching
+                  description: Is used to specify instructions for caching mechanisms.
                   schema:
                     type: string
                     example: "no-cache"
@@ -117,18 +121,20 @@ paths:
                     example: "application/json"
                 - in: header
                   name: Content-Type
-                  description: type of content
                   schema:
                     type: string
                     example: "application/json"
                 - in: header
                   name: X-Signature
-                  description: The Response hashed with a timestamp and signed with a private key
+                  description: |
+                    The request body concatenated with the `X-Timestamp` header, signed by the private key.
+                    This signature can be used to validate that the sender is GetID.
+                    See more details in the Webhooks section of the Administrative Portal.
                   schema:
                     type: string
                 - in: header
                   name: X-Timestamp
-                  description: Timestamp (moment of signing)
+                  description: The time of signing.
                   schema:
                     type: number
                     format: unix timestamp
@@ -275,10 +281,8 @@ paths:
           required: true
         - in: query
           name: externalId
-          description: A unique identifier.
           schema:
-            type: string
-            example: dse31-sla05-wte93
+            $ref: "#/components/schemas/ExternalID"
       requestBody:
         content:
           "application/json":
@@ -557,15 +561,23 @@ components:
       type: object
       properties:
         externalId:
-          type: string
-          description: Use this field to set custom ID from your system
-          example: ID-342
+          $ref: "#/components/schemas/ExternalID"
         labels:
-          type: object
-          description: Custom key-value labels (maximum 30)
-          maxProperties: 30
-          additionalProperties:
-            type: string
+          $ref: "#/components/schemas/MetadataLabels"
+
+    ExternalID:
+      type: string
+      description: |
+        A unique identifier.
+        You can use it to link an application with a user in your system.
+      example: dse31-sla05-wte93
+
+    MetadataLabels:
+      type: object
+      description: A set of arbitrary key-value pairs. The maximum amount of keys is 30.
+      maxProperties: 30
+      additionalProperties:
+        type: string
 
     ApplicationToVerify:
       type: object
@@ -748,19 +760,43 @@ components:
         - $ref: "#/components/schemas/CrossChecking"
 
     ApplicationListResponse:
+      allOf:
+        - type: object
+          properties:
+            applicationsListTotalItems:
+              type: integer
+              description: The total number of applications submitted.
+              example: 5
+          required: [applicationsListTotalItems]
+          additionalProperties: false
+        - oneOf:
+            - $ref: "#/components/schemas/ApplicationList"
+            - $ref: "#/components/schemas/ApplicationListIDs"
+
+    ApplicationList:
       type: object
       properties:
         applicationsList:
           type: array
+          description: |
+            The list of submitted applications.
+            This field is omitted if the request contains `idsOnly=true`.
           items:
             $ref: "#/components/schemas/VerificationResult"
+      required: [applicationsList]
+      additionalProperties: false
+
+    ApplicationListIDs:
+      type: object
+      properties:
         applicationsListIds:
           type: array
+          description: |
+            The list of submitted applications' IDs.
+            This field exists if the request contains `idsOnly=true`.
           items:
-            type: string
-        applicationsListTotalItems:
-          type: integer
-      required: [applicationsListTotalItems]
+            $ref: "#/components/schemas/ApplicationID"
+      required: [applicationsListIds]
       additionalProperties: false
 
     ApplicationID:
@@ -797,80 +833,80 @@ components:
     Metadata:
       type: object
       description: |
-        The meta information about the input data source.
-        This field can be used to add custom meta information.
-        It will also be added to the response as-is.
+        Meta information about the application.
+        Contains information passed with the application when submitting it using this API, or information added to the application by our SDK.
+        Also contains information added on our backend after receiving the application.
       properties:
         externalId:
-          type: string
-          description: Use this field to set custom ID from your system
-          example: ID-342
+          allOf:
+            - description: The value passed as `externalId` when submitting the application.
+            - $ref: "#/components/schemas/ExternalID"
+        labels:
+          allOf:
+            - description: The set of arbitrary key-value pairs passed as `labels` when submitting the application.
+            - $ref: "#/components/schemas/MetadataLabels"
         platform:
           type: string
-          description: The platform type an application is sent from
-          example:
-            - android
-            - ios
-            - web
-        clientName:
+          description: |
+            The platform from which the application was submitted, if our SDK was used: `ios`, `android` or `web`.
+            Or, if the application was submitted using the `POST api/v1/application` method, then the value is `API`.
+            Also, the value can be `internal` if the application was submitted using an "internal flow" in Administrative Portal.
+          enum: [android, ios, web, API, internal]
+          example: web
+        sdkVersion:
           type: string
-          description: The name of a client who sent a request
-          example: my-api-client
-        clientVersion:
-          type: string
-          description: The version of a client who sent a request
-          example: 1.0.0
-        acVersion:
-          type: string
-          description: The version of an acceptor client who received the request
-          example: 1.0.0
+          description: The version of the SDK that was used for submitting the application.
+          example: "6.8.2"
+        createdAt:
+          allOf:
+            - description: The time when the application was created.
+            - $ref: "#/components/schemas/Timestamp"
         ipAddress:
           type: string
-          description: The IP address a request was sent from
-          example: 8.8.8.8
+          description: The IP address of the end-user that submitted the application using our SDK.
+          example: 74.50.8.152
         country:
           type: string
-          description: A country detected from IP address
+          description: The country from which the user submitted the application. Determined by the IP address.
           example: EST
         city:
           type: string
-          description: A city detected from IP address
+          description: The city from which the user submitted the application. Determined by the IP address.
           example: Tallinn
         userAgent:
           type: string
-          description: User agent data retrieved from the user's client who sent an app from SDK
+          description: The user agent of the end-user that submitted the application using our SDK.
           example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36
         author:
           type: string
-          description: A username or email of an author of the request
-          example: admin
-        disableCs:
-          type: boolean
-          description: It allows to disable the customer support check
-          example: true
-        labels:
-          type: object
-          description: Custom key-value labels (maximum 30)
-          maxProperties: 30
-          additionalProperties:
-            type: string
+          description: The username or email of the Administrative Portal's user that submitted the application using an "internal flow".
         createdBy:
           type: string
+          description: |
+            The SDK that was used to submit the application.
+
+            This field is primarily needed to separate `web-mobile` and `web-desktop`, because all applications submitted using our Web SDK belongs to the `web` platform.
           enum: [web-desktop, web-mobile, android, ios]
-          description: Represent the source of starting the verification
-        createdAt:
-          description: The time when the application was created.
+          example: web-mobile
+        locale:
           type: string
-          format: date-time
-          example: "2020-03-17T20:28:37.061Z"
-      example:
-        externalId: ID-2345
-        platform: android
-        clientName: my-api-client
-        clientVersion: 1.0.0
-        labels:
-          my-custom-meta-name-1: custom-value-1
-          my-custom-meta-name-2: custom-value-2
+          description: |
+            The locale of the end-user that submitted the application using our SDK.
+
+            Note: different platforms use different separators and some locales contain more than two components.
+            For example, `en_GB` or `zh-Hans-CN` are also valid values.
+          example: en-GB
+        flowName:
+          type: string
+          description: |
+            The name of the verification flow, if our SDK was used.
+            Or the name of an "internal flow".
+          example: getid-doc-selfie-liveness
+
+    Timestamp:
+      type: string
+      format: date-time
+      example: "2020-03-17T20:28:37.061Z"
 
     Application:
       type: object
@@ -881,12 +917,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResultDocument"
+          minItems: 0
+          maxItems: 1
         selfie:
           properties:
             files:
               type: array
               items:
                 $ref: "#/components/schemas/ResultFacesMedia"
+              minItems: 0
+              maxItems: 3
           required: [files]
           additionalProperties: false
       additionalProperties: false
@@ -903,48 +943,56 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResultDocumentMedia"
+          minItems: 1
+          maxItems: 2
       required: [files]
       additionalProperties: false
 
-    ResultFacesMedia:
+    ResultMedia:
       type: object
       properties:
         id:
-          type: string
-          description: file id (filled automatically when missing)
+          $ref: "#/components/schemas/MediaFileID"
         uri:
           $ref: "#/components/schemas/MediaURI"
         mediaType:
           type: string
           example: image/jpeg
-        kind:
-          type: string
-          enum: [selfie, liveness-video, liveness-full-face]
-          example: selfie
-      required: [uri]
+      required: [id, uri]
       additionalProperties: false
+
+    MediaFileID:
+      type: string
+      description: The ID of the file.
+      example: 416bc61f2b001c8871ab8e73
 
     MediaURI:
       type: string
-      description: A temporary link to a media file.
+      description: A temporary link to the media file.
       format: uri
       example: https://some.site/image.jpeg?t=123
 
     ResultDocumentMedia:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The file id (filled automatically when missing)
-        kind:
-          $ref: "#/components/schemas/DocumentPageKind"
-        uri:
-          $ref: "#/components/schemas/MediaURI"
-        mediaType:
-          type: string
-          example: image/jpeg
-      required: [id, uri, kind]
-      additionalProperties: false
+      allOf:
+        - $ref: "#/components/schemas/ResultMedia"
+        - type: object
+          properties:
+            kind:
+              $ref: "#/components/schemas/DocumentPageKind"
+          required: [kind]
+          additionalProperties: false
+
+    ResultFacesMedia:
+      allOf:
+        - $ref: "#/components/schemas/ResultMedia"
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum: [selfie, liveness-video, liveness-full-face]
+              example: selfie
+          required: [kind]
+          additionalProperties: false
 
     VerificationTypes:
       type: array
@@ -960,9 +1008,8 @@ components:
 
     ProcessingState:
       type: string
-      enum:
-        - done
-        - processing
+      enum: [done, processing]
+      example: done
       description: |
         Application processing state:
           * `done` - the processing is finished
@@ -1569,22 +1616,26 @@ components:
       properties:
         locale:
           type: string
-          description: Predefine locale
+          description: A locale identifier. The SDK uses the specified locale as the default one.
           example: de
         profile:
           type: object
-          description: Pre-fill Form fields according to the SDK configuration
+          description: The profile data of the applicant.
+          example:
+            First name: John
+            Last name: Doe
+            Date of birth: "1985-11-22"
         redirects:
           type: object
-          description: Specify an URL to redirect
+          description: URLs to redirect the user after completing the verification flow.
           properties:
             onComplete:
               type: string
-              description: Redirect after Complete event
+              description: A URL to redirect to if the user has successfully passed the verification flow.
               example: https://google.com
             onFail:
               type: string
-              description: Redirect after Fail event
+              description: A URL to redirect to if the user has not passed the verification flow.
               example: https://google.com
     
     Dictionaries:
