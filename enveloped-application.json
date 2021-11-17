@@ -7,7 +7,7 @@
             "url": "./logo.svg",
             "altText": "GetID"
         },
-        "description": "# Overview\n\nThe GetID API allows you to send applications for verification and receive the results.\nVerification results for applications created using our SDKs can also be obtained through the API.\n\n# Authentication\n\nThe GetID API uses token-based authentication. \nAPI tokens must be included in the header of all requests made to the API.\n\n<SecurityDefinitions />\n"
+        "description": "# Overview\n\nThe GetID API allows you to send applications for verification and receive the results.\nVerification results for applications created using our SDKs can also be obtained through the API.\n\nA verification consists of one or more \"checks\".\nDifferent checks require different sets of an applicant's data.\n\n# Authentication\n\nThe GetID API uses token-based authentication. \nAPI tokens must be included in the header of all requests made to the API.\n\n<SecurityDefinitions />\n"
     },
     "tags": [
         {
@@ -499,7 +499,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/Dictionaries"
+                                "$ref": "#/components/schemas/TranslationDictionariesToCreate"
                             }
                         }
                     }
@@ -507,6 +507,9 @@
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/OK"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
                     },
                     "401": {
                         "$ref": "#/components/responses/Unauthorized"
@@ -518,6 +521,11 @@
             },
             "get": {
                 "summary": "List translation dictionaries",
+                "security": [
+                    {
+                        "APIKeyAuth": []
+                    }
+                ],
                 "description": "Returns all translation dictionaries.\n",
                 "responses": {
                     "200": {
@@ -525,7 +533,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Dictionaries"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/TranslationDictionaryListResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResponseCode200"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -554,7 +569,7 @@
                         "name": "dictionary",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/TranslationDictionaryName"
                         }
                     },
                     {
@@ -562,7 +577,7 @@
                         "name": "locale",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/LocaleIdentifier"
                         }
                     }
                 ],
@@ -789,11 +804,34 @@
                     }
                 }
             },
+            "BadRequest": {
+                "description": "Bad request.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "errorMessage": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                {
+                                    "$ref": "#/components/schemas/ResponseCode400"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "Unauthorized": {
                 "description": "Unauthorized access, invalid or missing authorization header.",
                 "content": {
                     "application/json": {
                         "schema": {
+                            "type": "object",
                             "properties": {
                                 "responseCode": {
                                     "type": "integer",
@@ -818,6 +856,7 @@
                 "content": {
                     "application/json": {
                         "schema": {
+                            "type": "object",
                             "properties": {
                                 "responseCode": {
                                     "type": "integer",
@@ -837,6 +876,7 @@
         "schemas": {
             "ApplicationToVerifyContainer": {
                 "type": "object",
+                "description": "The data that GetID accepts as input to perform the verification.\n",
                 "properties": {
                     "metadata": {
                         "$ref": "#/components/schemas/ApplicationToVerifyMetadata"
@@ -845,7 +885,7 @@
                         "$ref": "#/components/schemas/ApplicationToVerify"
                     },
                     "verificationTypes": {
-                        "$ref": "#/components/schemas/VerificationsToPerform"
+                        "$ref": "#/components/schemas/VerificationTypesToPerform"
                     }
                 },
                 "required": [
@@ -855,6 +895,7 @@
             },
             "ApplicationToVerifyMetadata": {
                 "type": "object",
+                "description": "Meta information about the application.",
                 "properties": {
                     "externalId": {
                         "$ref": "#/components/schemas/ExternalID"
@@ -884,7 +925,7 @@
                     "fields": {
                         "allOf": [
                             {
-                                "description": "The profile data of the applicant."
+                                "description": "The profile data of the applicant.\n\nIt must be provided and must contain \"First name\", \"Last name\" and \"Date of birth\" fields to perform a `watchlists` check.\n"
                             },
                             {
                                 "$ref": "#/components/schemas/ProfileDataFields"
@@ -893,7 +934,7 @@
                     },
                     "documents": {
                         "type": "array",
-                        "description": "The document to verify.",
+                        "description": "The applicant's ID document.\n\nIt must be provided to perform `data-extraction` and `face-matching` checks.\n",
                         "items": {
                             "$ref": "#/components/schemas/DocumentToVerify"
                         },
@@ -901,7 +942,7 @@
                         "maxItems": 1
                     },
                     "selfie": {
-                        "description": "The applicant's selfie.",
+                        "description": "The applicant's selfie.\n\nIt must be provided to perform a `face-matching` check.\n",
                         "properties": {
                             "files": {
                                 "type": "array",
@@ -938,6 +979,11 @@
                         "contentType": "string"
                     },
                     {
+                        "category": "Date of birth",
+                        "content": "1985-11-25",
+                        "contentType": "date"
+                    },
+                    {
                         "category": "Gender",
                         "content": "male",
                         "contentType": "sex"
@@ -949,12 +995,12 @@
                 "properties": {
                     "category": {
                         "type": "string",
-                        "description": "Kind of data.\nFor example: First name, Last name, Date of birth, Gender\n",
+                        "description": "The name of the field.\n\nThe naming convention for field names is \"the first word is capitalised, others are lowercased\".\n",
                         "example": "First name"
                     },
                     "content": {
                         "type": "string",
-                        "description": "The field value. It must be compliant with the category's format.\nThe gender field can take only two values: male, female\nDates must be in YYYY-MM-DD format\nCountry fields must be in [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements) format\nOther fields are plain strings\n",
+                        "description": "The value of the field.\n\nThe format of the value depends on its `category`.\n\nDates must be in YYYY-MM-DD format.\nThe \"Gender\" field can take only two values: `male`, `female`.\nCountry fields must be in ISO 3166-1 [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements) format.\nOther fields are plain strings.\n",
                         "example": "John"
                     },
                     "contentType": {
@@ -977,7 +1023,7 @@
                         "$ref": "#/components/schemas/DocumentType"
                     },
                     "files": {
-                        "description": "Document photos or scans",
+                        "description": "A photo of the main page of the document or two photos of both sides of a double-sided document.\n",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/DocumentPageMediaFile"
@@ -993,13 +1039,13 @@
             },
             "IssuingCountryCode": {
                 "type": "string",
-                "description": "The code of the issuing country of the document. Format: ISO 3166-1\n([alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)\nor [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
-                "pattern": "^[a-zA-Z]{2,3}$",
+                "description": "The code of the issuing country of the document. Format: ISO 3166-1 [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements))\n",
+                "pattern": "^[A-Z]{3}$",
                 "example": "JPN"
             },
             "DocumentType": {
                 "type": "string",
-                "description": "A type of a document.",
+                "description": "The type of the document.",
                 "enum": [
                     "passport",
                     "id-card",
@@ -1015,7 +1061,7 @@
             },
             "DocumentPageKind": {
                 "type": "string",
-                "description": "kind of document page",
+                "description": "A page of the document.\n* `front` is the front side of a two-sided document or the only provided page of a document\n* `back` is the back side of a two-sided document\n* `single-page` is the main page of a document that has only one page required for verification (e.g. most countries' passports)\n",
                 "enum": [
                     "front",
                     "back",
@@ -1047,9 +1093,8 @@
                 "type": "object",
                 "properties": {
                     "uri": {
-                        "description": "Data URI of the media\nAll common image formats are acceptable.\n",
+                        "description": "An image encoded to a base64 string.\nBoth JPEG and PNG images are acceptable.\n",
                         "type": "string",
-                        "format": "media-data-uri",
                         "example": "data:image/png;base64,aGVsbG8="
                     }
                 },
@@ -1058,68 +1103,57 @@
                 ],
                 "additionalProperties": false
             },
-            "Watchlists": {
-                "type": "string",
-                "description": "check a user on PEPs",
-                "enum": [
-                    "watchlists"
-                ]
-            },
-            "FaceMatching": {
-                "type": "string",
-                "description": "compare a photo on the document with a selfie",
-                "enum": [
-                    "face-matching"
-                ]
-            },
             "DataExtraction": {
                 "type": "string",
-                "description": "extract data from documents",
+                "description": "The data extraction from the provided document.\n",
                 "enum": [
                     "data-extraction"
                 ]
             },
-            "CrossChecking": {
+            "FaceMatching": {
                 "type": "string",
-                "description": "check the conformity between fields and extracted data",
+                "description": "The biometric comparison of the person in the selfie and the person in the ID document photo.\n",
                 "enum": [
-                    "cross-checking"
+                    "face-matching"
+                ]
+            },
+            "Watchlists": {
+                "type": "string",
+                "description": "A detailed report of any records relevant to the applicant's profile data (First name, Last name, Date of birth) found during global AML watchlists' screening.\n",
+                "enum": [
+                    "watchlists"
                 ]
             },
             "Liveness": {
                 "type": "string",
-                "description": "liveness check",
+                "description": "Identity check in live mode.\nThis check can be performed only if the GetID SDK was used for submitting the application.\n",
                 "enum": [
                     "liveness"
                 ]
             },
-            "VerificationsToPerform": {
-                "type": "array",
-                "description": "List of requested verifications. If the list isn't provided, all verifications will be applied.\n",
-                "items": {
-                    "$ref": "#/components/schemas/VerificationToPerform"
-                },
-                "example": [
-                    "watchlists",
-                    "face-matching",
-                    "data-extraction",
-                    "cross-checking"
-                ]
-            },
-            "VerificationToPerform": {
+            "VerificationTypeToPerform": {
                 "oneOf": [
                     {
-                        "$ref": "#/components/schemas/Watchlists"
+                        "$ref": "#/components/schemas/DataExtraction"
                     },
                     {
                         "$ref": "#/components/schemas/FaceMatching"
                     },
                     {
-                        "$ref": "#/components/schemas/DataExtraction"
-                    },
-                    {
-                        "$ref": "#/components/schemas/CrossChecking"
+                        "$ref": "#/components/schemas/Watchlists"
                     }
+                ]
+            },
+            "VerificationTypesToPerform": {
+                "type": "array",
+                "description": "The list of checks requested.\nIf no list is set, then all types of checks that have been paid for will be performed.\n",
+                "items": {
+                    "$ref": "#/components/schemas/VerificationTypeToPerform"
+                },
+                "example": [
+                    "data-extraction",
+                    "face-matching",
+                    "watchlists"
                 ]
             },
             "ApplicationListResponse": {
@@ -1190,6 +1224,7 @@
             },
             "VerificationResult": {
                 "type": "object",
+                "description": "The data that GetID provides as output for each application submitted.\n",
                 "properties": {
                     "id": {
                         "$ref": "#/components/schemas/ApplicationID"
@@ -1204,7 +1239,7 @@
                         "$ref": "#/components/schemas/VerificationTypes"
                     },
                     "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
+                        "$ref": "#/components/schemas/ApplicationProcessingState"
                     },
                     "overallResult": {
                         "$ref": "#/components/schemas/OverallResult"
@@ -1328,12 +1363,14 @@
             },
             "Application": {
                 "type": "object",
+                "description": "The data that have been provided for verification.\n",
                 "properties": {
                     "fields": {
                         "$ref": "#/components/schemas/ProfileDataFields"
                     },
                     "documents": {
                         "type": "array",
+                        "description": "The ID document provided by the applicant.",
                         "items": {
                             "$ref": "#/components/schemas/ResultDocument"
                         },
@@ -1341,6 +1378,8 @@
                         "maxItems": 1
                     },
                     "selfie": {
+                        "type": "object",
+                        "description": "Temporary links to media files with the applicant's face.",
                         "properties": {
                             "files": {
                                 "type": "array",
@@ -1369,7 +1408,7 @@
                         "$ref": "#/components/schemas/DocumentType"
                     },
                     "files": {
-                        "description": "Temporary links to the document photos or scans",
+                        "description": "Temporary links to the photos of the ID document.",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ResultDocumentMedia"
@@ -1442,13 +1481,7 @@
                         "type": "object",
                         "properties": {
                             "kind": {
-                                "type": "string",
-                                "enum": [
-                                    "selfie",
-                                    "liveness-video",
-                                    "liveness-full-face"
-                                ],
-                                "example": "selfie"
+                                "$ref": "#/components/schemas/FaceKind"
                             }
                         },
                         "required": [
@@ -1458,22 +1491,29 @@
                     }
                 ]
             },
+            "FaceKind": {
+                "type": "string",
+                "description": "The type of a media file with the applicant's face.\n* `selfie` is an image with a selfie of the applicant\n* `liveness-video` is a video recorded during the applicant's liveness check\n* `liveness-full-face` is an image taken during the liveness check\n",
+                "enum": [
+                    "selfie",
+                    "liveness-video",
+                    "liveness-full-face"
+                ],
+                "example": "selfie"
+            },
             "VerificationTypes": {
                 "type": "array",
                 "description": "The list of checks performed.",
                 "items": {
                     "oneOf": [
                         {
-                            "$ref": "#/components/schemas/Watchlists"
+                            "$ref": "#/components/schemas/DataExtraction"
                         },
                         {
                             "$ref": "#/components/schemas/FaceMatching"
                         },
                         {
-                            "$ref": "#/components/schemas/DataExtraction"
-                        },
-                        {
-                            "$ref": "#/components/schemas/CrossChecking"
+                            "$ref": "#/components/schemas/Watchlists"
                         },
                         {
                             "$ref": "#/components/schemas/Liveness"
@@ -1481,117 +1521,139 @@
                     ]
                 },
                 "example": [
-                    "face-matching",
                     "data-extraction",
+                    "face-matching",
                     "liveness"
+                ]
+            },
+            "ApplicationProcessingState": {
+                "allOf": [
+                    {
+                        "description": "Indicates whether the verification of this application has been completed.\n\n* `processing` - the application is being processed\n* `done` - the verification has been completed\n"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ProcessingState"
+                    }
+                ]
+            },
+            "ServiceProcessingState": {
+                "allOf": [
+                    {
+                        "description": "Indicates whether the check has been completed.\n\n* `processing` - the service is still performing the check\n* `done` - the check has been completed\n"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ProcessingState"
+                    }
                 ]
             },
             "ProcessingState": {
                 "type": "string",
                 "enum": [
-                    "done",
-                    "processing"
+                    "processing",
+                    "done"
                 ],
-                "example": "done",
-                "description": "Application processing state:\n  * `done` - the processing is finished\n  * `processing` - the application is being processed\n"
+                "example": "done"
             },
             "OverallResult": {
                 "type": "object",
-                "description": "Summary verification result (ommitted if the state is `processing`)",
+                "description": "The summary of the result of the verification.\n\nOmitted while the `processingState` is `processing`.\n",
                 "properties": {
                     "status": {
-                        "allOf": [
-                            {
-                                "description": "The worst result from all services"
-                            },
-                            {
-                                "$ref": "#/components/schemas/VerificationStatus"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/ApplicationVerificationStatus"
                     },
                     "comments": {
                         "type": "array",
-                        "description": "An array of results from all services (You can find full results in the servicesResults section)",
+                        "description": "The list of checks performed and their brief results.",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "service": {
-                                    "description": "A service name",
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "$ref": "#/components/schemas/VerificationStatus"
-                                },
-                                "comment": {
-                                    "description": "A short comment about the result",
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "service",
-                                "status"
-                            ]
-                        },
-                        "example": [
-                            {
-                                "service": "face-matching",
-                                "status": "approved",
-                                "comment": "faces are similar"
-                            },
-                            {
-                                "service": "watchlists",
-                                "status": "declined",
-                                "comment": "found 2 reports against the person"
-                            },
-                            {
-                                "service": "data-extraction",
-                                "status": "approved",
-                                "comment": "data was extracted"
-                            }
-                        ]
+                            "$ref": "#/components/schemas/ServiceComment"
+                        }
                     },
                     "concerns": {
-                        "$ref": "#/components/schemas/Concerns"
+                        "type": "array",
+                        "description": "The list of all the issues found during all the checks.",
+                        "items": {
+                            "$ref": "#/components/schemas/ServiceConcern"
+                        }
                     },
                     "validationDate": {
                         "$ref": "#/components/schemas/ValidationDate"
                     }
                 },
-                "additionalProperties": false,
                 "required": [
                     "status",
                     "comments",
                     "validationDate"
-                ]
+                ],
+                "additionalProperties": false
             },
-            "Concerns": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "message": {
-                            "type": "string"
-                        },
-                        "service": {
-                            "type": "string"
-                        },
-                        "status": {
-                            "type": "string"
-                        }
+            "ServiceComment": {
+                "type": "object",
+                "properties": {
+                    "service": {
+                        "$ref": "#/components/schemas/Service"
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceVerificationStatus"
+                            },
+                            {
+                                "example": "approved"
+                            }
+                        ]
+                    },
+                    "comment": {
+                        "description": "A brief comment on the result of the check.",
+                        "type": "string",
+                        "example": "No issues found."
                     }
                 },
-                "example": [
-                    {
-                        "service": "face-matching",
-                        "status": "declined",
-                        "comment": "The photo is not a selfie."
-                    },
-                    {
-                        "service": "crosschecking",
-                        "status": "needs-review",
-                        "comment": "The last name extracted from the document doesn't match the last name from the profile data."
-                    }
+                "required": [
+                    "service",
+                    "status"
                 ]
+            },
+            "ServiceConcern": {
+                "type": "object",
+                "properties": {
+                    "service": {
+                        "$ref": "#/components/schemas/Service"
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "description": "The level of severity of the issue according to the current settings of the verification rules.\n"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ServiceConcernStatus"
+                            },
+                            {
+                                "example": "declined"
+                            }
+                        ]
+                    },
+                    "message": {
+                        "description": "A brief description of the issue.",
+                        "type": "string",
+                        "example": "The photo is not a selfie."
+                    }
+                },
+                "required": [
+                    "service",
+                    "status"
+                ]
+            },
+            "Service": {
+                "type": "string",
+                "description": "The name of the service performed the check.",
+                "enum": [
+                    "doc-check",
+                    "profile-check",
+                    "face-matching",
+                    "liveness",
+                    "watchlists"
+                ],
+                "example": "face-matching"
             },
             "ValidationDate": {
                 "type": "string",
@@ -1599,525 +1661,171 @@
                 "format": "date-time",
                 "example": "2020-03-17T20:28:37.061Z"
             },
-            "SummaryResult": {
-                "type": "object",
-                "description": "The summary verification result (ommitted if the state is `processing`)",
-                "properties": {
-                    "status": {
-                        "description": "The worst result from all services",
+            "ApplicationVerificationStatus": {
+                "allOf": [
+                    {
+                        "description": "The worst result of all the checks performed.\n\nA \"check\" in this context means checking a particular aspect of the application submitted.\nAll checks and their results can be found in `servicesResults` property of the verification result.\n\nThe worst result means the closest to the end of the following list: `approved`, `needs-review`, `declined`, `error`.\n\nThe result of most checks depends not only on the provided data, but also on the \"verification rules\" settings in the Administrative Portal.\n"
+                    },
+                    {
                         "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "document": {
-                        "$ref": "#/components/schemas/ResultDocument"
-                    },
-                    "concerns": {
-                        "$ref": "#/components/schemas/Concerns"
-                    },
-                    "validationDate": {
-                        "$ref": "#/components/schemas/ValidationDate"
                     }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "status",
-                    "validationDate"
+                ]
+            },
+            "ServiceVerificationStatus": {
+                "allOf": [
+                    {
+                        "description": "The result of the check.\n"
+                    },
+                    {
+                        "$ref": "#/components/schemas/VerificationStatus"
+                    }
+                ]
+            },
+            "ServiceConcernStatus": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NeedsReview"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Declined"
+                    }
                 ]
             },
             "VerificationStatus": {
-                "type": "string",
-                "description": "The result of verification:\n* `approved` - no problems are found\n* `declined` - an application is declined due to any facts defined as critical in Settings\n* `needs-review` - some facts are defined as considered in Settings\n* `error` - an error has occurred (wrong or missing input data; service error)\n",
-                "enum": [
-                    "declined",
-                    "approved",
-                    "needs-review",
-                    "error"
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/Approved"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NeedsReview"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Declined"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Error"
+                    }
                 ]
             },
             "BreakdownStatus": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/Approved"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NeedsReview"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Declined"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Disabled"
+                    }
+                ]
+            },
+            "Approved": {
                 "type": "string",
-                "description": "Breakdown status:\n* `approved` - the check is successful\n* `declined` - the check has failed\n* `needs-review` - the check has failed, manual review is needed\n* `disabled` - the check is disabled\n",
+                "description": "No problems are found.\n",
                 "enum": [
-                    "declined",
-                    "approved",
-                    "needs-review",
+                    "approved"
+                ]
+            },
+            "NeedsReview": {
+                "type": "string",
+                "description": "A problem detected which is not considered critical under the current settings of the verification rules.\n",
+                "enum": [
+                    "needs-review"
+                ]
+            },
+            "Declined": {
+                "type": "string",
+                "description": "A problem detected which is considered critical under the current settings of the verification rules.\n",
+                "enum": [
+                    "declined"
+                ]
+            },
+            "Error": {
+                "type": "string",
+                "description": "An error occurred, for example due to invalid input data.\n",
+                "enum": [
+                    "error"
+                ]
+            },
+            "Disabled": {
+                "type": "string",
+                "description": "The check is disabled.\n",
+                "enum": [
                     "disabled"
                 ]
             },
             "ServiceResults": {
                 "type": "object",
+                "description": "The list of checks performed and their full results.",
                 "properties": {
+                    "docCheck": {
+                        "$ref": "#/components/schemas/DocCheckServiceResult"
+                    },
+                    "profileCheck": {
+                        "$ref": "#/components/schemas/ProfileCheckServiceResult"
+                    },
                     "faceMatching": {
                         "$ref": "#/components/schemas/FaceMatchingServiceResult"
                     },
                     "livenessCheck": {
                         "$ref": "#/components/schemas/LivenessCheckServiceResult"
                     },
-                    "dataExtraction": {
-                        "$ref": "#/components/schemas/DataExtractionServiceResult"
-                    },
-                    "crossChecking": {
-                        "$ref": "#/components/schemas/CrossCheckingServiceResult"
-                    },
                     "watchlists": {
                         "$ref": "#/components/schemas/WatchlistsServiceResult"
-                    },
-                    "docCheck": {
-                        "$ref": "#/components/schemas/DocCheckServiceResult"
-                    },
-                    "profileCheck": {
-                        "$ref": "#/components/schemas/ProfileCheckServiceResult"
                     }
                 },
-                "additionalProperties": false
-            },
-            "FaceMatchingServiceResult": {
-                "type": "object",
-                "description": "The Face-matching service compares a photo on the document with a selfie",
-                "properties": {
-                    "comment": {
-                        "description": "A short comment about the result",
-                        "type": "string",
-                        "example": "Faces are not similar"
-                    },
-                    "verifier": {
-                        "description": "Name of the verifier",
-                        "type": "string",
-                        "example": "Facemelter"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "results": {
-                        "$ref": "#/components/schemas/FaceMatchingResult"
-                    },
-                    "settings": {
-                        "type": "object",
-                        "description": "Settings determining a result status.\nIf both threshold are equal, the result status can only be `declined` or `approved`\n",
-                        "properties": {
-                            "declineThreshold": {
-                                "description": "A threshold between `declined` and `needs-review` statuses",
-                                "type": "number",
-                                "example": 0.4
-                            },
-                            "needsReviewThreshold": {
-                                "description": "A threshold between `needs-review` and `approved` statuses",
-                                "type": "number",
-                                "example": 0.6
-                            }
-                        }
-                    }
-                },
-                "required": [
-                    "status"
-                ],
-                "additionalProperties": false
-            },
-            "FaceMatchingResult": {
-                "type": "array",
-                "description": "The Face-matching service result",
-                "items": {
-                    "properties": {
-                        "files": {
-                            "description": "File ids that were involved in checking",
-                            "type": "array",
-                            "minItems": 0,
-                            "maxItems": 3,
-                            "uniqueItems": true,
-                            "items": {
-                                "type": "string"
-                            },
-                            "example": [
-                                "face-abc1",
-                                "document-photo-qwe7"
-                            ]
-                        },
-                        "selfieQuality": {
-                            "$ref": "#/components/schemas/CheckList"
-                        },
-                        "score": {
-                            "description": "The faces similarity score",
-                            "type": "number",
-                            "example": 0.3
-                        }
-                    },
-                    "required": [
-                        "score",
-                        "files"
-                    ],
-                    "additionalProperties": false
-                }
-            },
-            "LivenessCheckServiceResult": {
-                "type": "object",
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "verifier": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "livenessCheck": {
-                        "$ref": "#/components/schemas/CheckList"
-                    }
-                },
-                "required": [
-                    "status"
-                ],
-                "additionalProperties": false
-            },
-            "DataExtractionServiceResult": {
-                "type": "object",
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "verifier": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "extracted": {
-                        "$ref": "#/components/schemas/Extracted"
-                    }
-                },
-                "required": [
-                    "status"
-                ],
-                "additionalProperties": false,
-                "example": {
-                    "comment": "Data was extracted",
-                    "verifier": "DeerPlugin",
-                    "status": "approved",
-                    "extracted": [
-                        {
-                            "documentId": "passport-1",
-                            "ocr": [
-                                {
-                                    "contentType": "string",
-                                    "category": "First name",
-                                    "content": "Joe"
-                                },
-                                {
-                                    "contentType": "string",
-                                    "category": "First name",
-                                    "content": "Джо",
-                                    "locale": "ru_RU"
-                                },
-                                {
-                                    "contentType": "string",
-                                    "category": "Last name",
-                                    "content": "Black"
-                                }
-                            ],
-                            "mrz": [
-                                {
-                                    "contentType": "string",
-                                    "category": "First name",
-                                    "content": "James"
-                                },
-                                {
-                                    "contentType": "string",
-                                    "category": "Last name",
-                                    "content": "Black"
-                                }
-                            ]
-                        },
-                        {
-                            "documentId": "driving-licence-1",
-                            "ocr": [
-                                {
-                                    "contentType": "string",
-                                    "category": "First name",
-                                    "content": "Joe"
-                                },
-                                {
-                                    "contentType": "string",
-                                    "category": "Address",
-                                    "content": "May street"
-                                }
-                            ]
-                        }
-                    ]
-                }
-            },
-            "DataExtractionResult": {
-                "type": "object",
-                "properties": {
-                    "contentType": {
-                        "$ref": "#/components/schemas/ContentType"
-                    },
-                    "category": {
-                        "type": "string",
-                        "description": "The extracted field name"
-                    },
-                    "content": {
-                        "type": "string",
-                        "description": "The extracted field value"
-                    },
-                    "locale": {
-                        "type": "string",
-                        "description": "The extracted value locale",
-                        "example": "en_UK"
-                    },
-                    "extractedFormat": {
-                        "type": "string",
-                        "description": "The extracted date format, applicable if a date is presented in non-default format YYYY-MM-DD",
-                        "example": "YYYY-MM"
-                    },
-                    "valid": {
-                        "type": "boolean"
-                    }
-                },
-                "required": [
-                    "contentType",
-                    "category",
-                    "content"
-                ],
                 "additionalProperties": false
             },
             "DocCheckServiceResult": {
                 "type": "object",
+                "description": "The result of the complex check of the provided ID document.\n",
                 "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
                     "verifier": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "documentDataChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/DocumentDataChecking"
-                        }
-                    },
-                    "documentPhotoQuality": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "dataExtractionConsistency": {
-                        "$ref": "#/components/schemas/CheckList"
-                    }
-                }
-            },
-            "Extracted": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "documentId": {
-                            "type": "string",
-                            "description": "The document ID from which data was extracted"
-                        },
-                        "ocr": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/DataExtractionResult"
-                            }
-                        },
-                        "mrz": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/DataExtractionResult"
-                            }
-                        },
-                        "images": {
-                            "type": "array",
-                            "items": {
-                                "properties": {
-                                    "kind": {
-                                        "type": "string",
-                                        "example": "portrait"
-                                    },
-                                    "uri": {
-                                        "$ref": "#/components/schemas/MediaURI"
-                                    }
-                                },
-                                "additionalProperties": false,
-                                "required": [
-                                    "kind",
-                                    "uri"
-                                ]
-                            }
-                        }
-                    },
-                    "additionalProperties": false
-                }
-            },
-            "ProfileCheckServiceResult": {
-                "type": "object",
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "verifier": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "formCompare": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "matchLocation": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "fieldChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/FieldChecking"
-                        }
-                    }
-                }
-            },
-            "CrossCheckingServiceResult": {
-                "type": "object",
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "verifier": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
-                    },
-                    "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
-                    },
-                    "fieldChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/FieldChecking"
-                        },
-                        "description": "Contains a list of checked fields\nIf the value corresponding to the field wasn't extracted, such case will also be added to the list\n",
-                        "example": [
-                            {
-                                "category": "First name",
-                                "field": "John",
-                                "extracted": "Joanna",
-                                "equal": false,
-                                "documentId": "passport-1"
-                            },
-                            {
-                                "category": "Last name",
-                                "field": "Doe",
-                                "extracted": "",
-                                "equal": false,
-                                "documentId": "passport-1"
-                            },
-                            {
-                                "category": "Date of birth",
-                                "field": "1999-09-31",
-                                "extracted": "1999-09-31",
-                                "equal": true,
-                                "documentId": "passport-1"
-                            },
-                            {
-                                "category": "Address",
-                                "field": "May street",
-                                "extracted": "April street",
-                                "equal": false,
-                                "documentId": "driving-licence-1"
-                            }
-                        ]
-                    },
-                    "documentDataChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/DocumentDataChecking"
-                        }
-                    },
-                    "documentPhotoQuality": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "originalDocumentPresence": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "documentQuality": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "fraudAssesment": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "formCompare": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "matchLocation": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "documentCompare": {
-                        "$ref": "#/components/schemas/CheckList"
-                    },
-                    "dataExtractionConsistency": {
-                        "$ref": "#/components/schemas/CheckList"
-                    }
-                },
-                "required": [
-                    "status"
-                ],
-                "additionalProperties": false
-            },
-            "FieldChecking": {
-                "type": "object",
-                "properties": {
-                    "category": {
-                        "type": "string",
-                        "example": "First name"
-                    },
-                    "field": {
-                        "type": "string",
-                        "example": "John"
-                    },
-                    "extracted": {
-                        "type": "string",
-                        "example": "Joanna"
-                    },
-                    "equal": {
-                        "type": "boolean"
-                    },
-                    "status": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/BreakdownStatus"
+                                "$ref": "#/components/schemas/ServiceResultVerifier"
                             },
                             {
-                                "description": "The data check status"
+                                "example": "Doc-checker"
                             }
                         ]
                     },
-                    "documentId": {
-                        "type": "string",
-                        "description": "The document ID from which extracted data is compared"
+                    "comment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultComment"
+                            },
+                            {
+                                "example": "No issues found."
+                            }
+                        ]
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ServiceProcessingState"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ServiceVerificationStatus"
+                    },
+                    "documentDataChecking": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentDataChecking"
+                        }
+                    },
+                    "documentPhotoQuality": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "dataExtractionConsistency": {
+                        "$ref": "#/components/schemas/CheckList"
                     }
                 },
                 "required": [
-                    "category",
-                    "field",
-                    "extracted",
-                    "equal"
-                ],
-                "additionalProperties": false
+                    "processingState"
+                ]
             },
             "DocumentDataChecking": {
                 "type": "object",
@@ -2144,10 +1852,10 @@
                     "status": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/BreakdownStatus"
+                                "description": "The result of the check."
                             },
                             {
-                                "description": "The check data status"
+                                "$ref": "#/components/schemas/BreakdownStatus"
                             }
                         ]
                     },
@@ -2172,27 +1880,355 @@
                 ],
                 "additionalProperties": false
             },
-            "WatchlistsServiceResult": {
+            "ProfileCheckServiceResult": {
                 "type": "object",
+                "description": "The result of the comparison of the applicant's profile data that was provided using this API or collected using our SDK with the data extracted from the ID document.\n",
                 "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
                     "verifier": {
-                        "type": "string"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultVerifier"
+                            },
+                            {
+                                "example": "Profile-checker"
+                            }
+                        ]
                     },
-                    "status": {
-                        "$ref": "#/components/schemas/VerificationStatus"
+                    "comment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultComment"
+                            },
+                            {
+                                "example": "No issues found."
+                            }
+                        ]
                     },
                     "processingState": {
-                        "$ref": "#/components/schemas/ProcessingState"
+                        "$ref": "#/components/schemas/ServiceProcessingState"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ServiceVerificationStatus"
+                    },
+                    "formCompare": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "matchLocation": {
+                        "$ref": "#/components/schemas/CheckList"
+                    },
+                    "fieldChecking": {
+                        "type": "array",
+                        "description": "The result of comparing the profile data and the data extracted from the document.",
+                        "items": {
+                            "$ref": "#/components/schemas/FieldChecking"
+                        }
+                    }
+                }
+            },
+            "FieldChecking": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "description": "The name of the field.",
+                        "example": "First name"
+                    },
+                    "field": {
+                        "type": "string",
+                        "description": "The value provided as profile data.",
+                        "example": "John"
+                    },
+                    "extracted": {
+                        "type": "string",
+                        "description": "The value extracted from the ID document.",
+                        "example": "Joanna"
+                    },
+                    "equal": {
+                        "type": "boolean",
+                        "description": "Indicates whether the `field` and the `extracted` values are equal.",
+                        "example": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "description": "The result of the check."
+                            },
+                            {
+                                "$ref": "#/components/schemas/BreakdownStatus"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "category",
+                    "field",
+                    "extracted",
+                    "equal",
+                    "status"
+                ],
+                "additionalProperties": false
+            },
+            "FaceMatchingServiceResult": {
+                "type": "object",
+                "description": "The result of the biometric comparison of the person who takes a selfie and/or passes the liveness check and the person in the ID document photo.\n",
+                "properties": {
+                    "verifier": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultVerifier"
+                            },
+                            {
+                                "example": "Face-checker"
+                            }
+                        ]
+                    },
+                    "comment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultComment"
+                            },
+                            {
+                                "example": "No issues found."
+                            }
+                        ]
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ServiceProcessingState"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ServiceVerificationStatus"
+                    },
+                    "results": {
+                        "$ref": "#/components/schemas/FaceMatchingResult"
+                    },
+                    "settings": {
+                        "type": "object",
+                        "description": "The settings that determine the result of the check.\nIf both thresholds are equal, the `status` can only be `declined` or `approved`.\n",
+                        "properties": {
+                            "declineThreshold": {
+                                "description": "The threshold between `declined` and `needs-review` statuses.",
+                                "type": "number",
+                                "example": 0.4
+                            },
+                            "needsReviewThreshold": {
+                                "description": "The threshold between `needs-review` and `approved` statuses.",
+                                "type": "number",
+                                "example": 0.6
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "processingState"
+                ],
+                "additionalProperties": false
+            },
+            "FaceMatchingResult": {
+                "type": "array",
+                "description": "The result of the biometric comparison of the faces in the images provided.",
+                "items": {
+                    "properties": {
+                        "files": {
+                            "description": "The list of IDs of files participated in the comparison.",
+                            "type": "array",
+                            "minItems": 0,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            },
+                            "example": [
+                                "face-abc1",
+                                "document-photo-qwe7"
+                            ]
+                        },
+                        "selfieQuality": {
+                            "$ref": "#/components/schemas/CheckList"
+                        },
+                        "score": {
+                            "description": "A number indicating the level of similarity of faces.",
+                            "type": "number",
+                            "example": 0.3
+                        }
+                    },
+                    "required": [
+                        "score",
+                        "files"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "LivenessCheckServiceResult": {
+                "type": "object",
+                "description": "The result of the liveness check.\n\nThis check can only be performed using the GetID SDK.\nIt's not possible to perform this check submitting the application using the API.\n",
+                "properties": {
+                    "verifier": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultVerifier"
+                            },
+                            {
+                                "example": "Liveness service"
+                            }
+                        ]
+                    },
+                    "comment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultComment"
+                            },
+                            {
+                                "example": "Liveness check passed."
+                            }
+                        ]
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ServiceProcessingState"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ServiceVerificationStatus"
+                    },
+                    "livenessCheck": {
+                        "$ref": "#/components/schemas/LivenessCheckResult"
+                    }
+                },
+                "required": [
+                    "processingState",
+                    "status"
+                ],
+                "additionalProperties": false
+            },
+            "LivenessCheckResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the liveness check.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "livenessCheck"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Identity check in live mode."
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/LivenessConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "Consideration": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/ConsiderationType"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ConsiderationStatus"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A description of the check."
+                    }
+                },
+                "required": [
+                    "type",
+                    "status"
+                ],
+                "additionalProperties": false
+            },
+            "LivenessConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "Liveness check passed",
+                    "Liveness service signature match"
+                ],
+                "example": "Liveness check passed"
+            },
+            "ServiceResultVerifier": {
+                "type": "string",
+                "description": "The name of the service performed the check."
+            },
+            "ServiceResultComment": {
+                "type": "string",
+                "description": "A brief description of the result of the check."
+            },
+            "ConsiderationType": {
+                "type": "string",
+                "enum": [
+                    "clear",
+                    "consider"
+                ],
+                "example": "clear"
+            },
+            "ConsiderationStatus": {
+                "type": "string",
+                "enum": [
+                    "approved",
+                    "needs-review",
+                    "declined",
+                    "error"
+                ],
+                "example": "approved"
+            },
+            "WatchlistsServiceResult": {
+                "type": "object",
+                "description": "A detailed report of any records relevant to the applicant's profile data (First name, Last name, Date of birth) found during global AML watchlists' screening.\n",
+                "properties": {
+                    "verifier": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultVerifier"
+                            },
+                            {
+                                "example": "Watchlists-checker"
+                            }
+                        ]
+                    },
+                    "comment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ServiceResultComment"
+                            },
+                            {
+                                "example": "No issues found."
+                            }
+                        ]
+                    },
+                    "processingState": {
+                        "$ref": "#/components/schemas/ServiceProcessingState"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ServiceVerificationStatus"
                     },
                     "sentFields": {
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "description": "The list of profile data fields that have been sent to the watchlist service.",
+                        "description": "A list of the profile data fields that have been used to search for records in the watchlists.",
                         "example": [
                             "First name",
                             "Last name",
@@ -2204,19 +2240,19 @@
                     },
                     "records": {
                         "type": "array",
+                        "description": "Records from AML watchlists can have any structure.",
                         "items": {
                             "$ref": "#/components/schemas/WatchlistsRecord"
                         }
                     }
                 },
                 "required": [
-                    "status"
+                    "processingState"
                 ],
                 "additionalProperties": false
             },
             "WatchlistsRecord": {
-                "type": "object",
-                "description": "Watchlists' record can be of any data structure"
+                "type": "object"
             },
             "ContentType": {
                 "type": "string",
@@ -2313,13 +2349,13 @@
                     "params": {
                         "type": "object",
                         "example": {
-                            "pattern": "^[a-zA-Z]{2,3}$"
+                            "pattern": "^[A-Z]{3}$"
                         }
                     },
                     "message": {
                         "type": "string",
                         "description": "A human-readable description of the error.",
-                        "example": "it should match the pattern \"^[a-zA-Z]{2,3}$\""
+                        "example": "It should match the pattern \"^[A-Z]{3}$\"."
                     }
                 },
                 "additionalProperties": false
@@ -2328,9 +2364,14 @@
                 "type": "object",
                 "properties": {
                     "locale": {
-                        "type": "string",
-                        "description": "A locale identifier. The SDK uses the specified locale as the default one.",
-                        "example": "de"
+                        "allOf": [
+                            {
+                                "description": "A locale identifier. The SDK uses the specified locale as the default one."
+                            },
+                            {
+                                "$ref": "#/components/schemas/LocaleIdentifier"
+                            }
+                        ]
                     },
                     "profile": {
                         "type": "object",
@@ -2359,43 +2400,70 @@
                     }
                 }
             },
-            "Dictionaries": {
-                "type": "array",
-                "items": {
-                    "properties": {
-                        "label": {
-                            "type": "string",
-                            "description": "It is the string that will be viewed in the translation list"
-                        },
-                        "dictionary": {
-                            "type": "string",
-                            "description": "Name of a custom dictionary (You should use this name in SDK config)"
-                        },
-                        "locale": {
-                            "type": "string",
-                            "description": "locale"
-                        },
-                        "default": {
-                            "type": "boolean",
-                            "description": "Use this translation by default"
-                        },
+            "LocaleIdentifier": {
+                "type": "string",
+                "example": "pt_BR"
+            },
+            "TranslationDictionariesToCreate": {
+                "type": "object",
+                "properties": {
+                    "dictionaries": {
+                        "type": "array",
                         "items": {
-                            "properties": {
-                                "dictionaries": {
-                                    "description": "Key - value pairs for translations",
-                                    "type": "object"
-                                }
-                            },
-                            "additionalProperties": false
+                            "$ref": "#/components/schemas/TranslationDictionary"
                         }
+                    }
+                },
+                "required": [
+                    "dictionaries"
+                ],
+                "additionalProperties": false
+            },
+            "TranslationDictionary": {
+                "type": "object",
+                "properties": {
+                    "dictionary": {
+                        "$ref": "#/components/schemas/TranslationDictionaryName"
                     },
-                    "required": [
-                        "label",
-                        "dictionary",
-                        "locale",
-                        "items"
-                    ]
-                }
+                    "locale": {
+                        "$ref": "#/components/schemas/LocaleIdentifier"
+                    },
+                    "items": {
+                        "type": "object",
+                        "description": "A set of key-value pairs.",
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "example": {
+                            "global_shared_next": "Go next"
+                        }
+                    }
+                },
+                "required": [
+                    "dictionary",
+                    "locale",
+                    "items"
+                ]
+            },
+            "TranslationDictionaryName": {
+                "type": "string",
+                "description": "The name of a translations dictionary.",
+                "example": "my-translations"
+            },
+            "TranslationDictionaryListResponse": {
+                "type": "object",
+                "properties": {
+                    "dictionaries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TranslationDictionary"
+                        }
+                    }
+                },
+                "required": [
+                    "dictionaries"
+                ],
+                "additionalProperties": false
             },
             "APITokenToCreate": {
                 "type": "object",
