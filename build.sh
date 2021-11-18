@@ -1,1 +1,1 @@
-yaml2json ./enveloped-application.yaml -p -i4 -s
+yaml2json ./getid-api-v1.yml -p -i4 -s

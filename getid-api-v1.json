@@ -141,7 +141,7 @@
                 },
                 "callbacks": {
                     "onOrderedCallback": {
-                        "custom predefined by client webhook url": {
+                        "The URL can be set in the Webhooks section of the Administrative Portal": {
                             "post": {
                                 "parameters": [
                                     {
@@ -182,8 +182,7 @@
                                         "name": "X-Timestamp",
                                         "description": "The time of signing.",
                                         "schema": {
-                                            "type": "number",
-                                            "format": "unix timestamp"
+                                            "$ref": "#/components/schemas/Timestamp"
                                         }
                                     }
                                 ],
@@ -228,7 +227,14 @@
                         "name": "id",
                         "required": true,
                         "schema": {
-                            "$ref": "#/components/schemas/ApplicationID"
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/ApplicationID"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/SubmittedExternalID"
+                                }
+                            ]
                         }
                     }
                 ],
@@ -994,9 +1000,7 @@
                 "type": "object",
                 "properties": {
                     "category": {
-                        "type": "string",
-                        "description": "The name of the field.\n\nThe naming convention for field names is \"the first word is capitalised, others are lowercased\".\n",
-                        "example": "First name"
+                        "$ref": "#/components/schemas/FieldCategory"
                     },
                     "content": {
                         "type": "string",
@@ -1012,6 +1016,11 @@
                     "content"
                 ],
                 "additionalProperties": false
+            },
+            "FieldCategory": {
+                "type": "string",
+                "description": "The name of the field.\n\nThe naming convention for field names is \"the first word is capitalised, others are lowercased\".\n",
+                "example": "First name"
             },
             "DocumentToVerify": {
                 "type": "object",
@@ -1093,7 +1102,7 @@
                 "type": "object",
                 "properties": {
                     "uri": {
-                        "description": "An image encoded to a base64 string.\nBoth JPEG and PNG images are acceptable.\n",
+                        "description": "An image encoded to a base64 string.\n\nBoth JPEG and PNG images are acceptable.\nImages in PDF format are acceptable too.\n",
                         "type": "string",
                         "example": "data:image/png;base64,aGVsbG8="
                     }
@@ -1219,7 +1228,6 @@
             "ApplicationID": {
                 "type": "string",
                 "description": "The ID of the application.",
-                "format": "object-id",
                 "example": "5e62110968e3fb4d655756d1"
             },
             "VerificationResult": {
@@ -1249,6 +1257,9 @@
                     },
                     "comment": {
                         "$ref": "#/components/schemas/Comment"
+                    },
+                    "logs": {
+                        "$ref": "#/components/schemas/Logs"
                     }
                 },
                 "required": [
@@ -1263,14 +1274,7 @@
                 "description": "Meta information about the application.\nContains information passed with the application when submitting it using this API, or information added to the application by our SDK.\nAlso contains information added on our backend after receiving the application.\n",
                 "properties": {
                     "externalId": {
-                        "allOf": [
-                            {
-                                "description": "The value passed as `externalId` when submitting the application."
-                            },
-                            {
-                                "$ref": "#/components/schemas/ExternalID"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/SubmittedExternalID"
                     },
                     "labels": {
                         "allOf": [
@@ -1355,6 +1359,16 @@
                         "example": "getid-doc-selfie-liveness"
                     }
                 }
+            },
+            "SubmittedExternalID": {
+                "allOf": [
+                    {
+                        "description": "The value passed as `externalId` when submitting the application."
+                    },
+                    {
+                        "$ref": "#/components/schemas/ExternalID"
+                    }
+                ]
             },
             "Timestamp": {
                 "type": "string",
@@ -1576,7 +1590,14 @@
                         }
                     },
                     "validationDate": {
-                        "$ref": "#/components/schemas/ValidationDate"
+                        "allOf": [
+                            {
+                                "description": "The date and time of completion of the validation.\n"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Timestamp"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -1655,12 +1676,6 @@
                 ],
                 "example": "face-matching"
             },
-            "ValidationDate": {
-                "type": "string",
-                "description": "The date and time of completion of the validation.",
-                "format": "date-time",
-                "example": "2020-03-17T20:28:37.061Z"
-            },
             "ApplicationVerificationStatus": {
                 "allOf": [
                     {
@@ -1704,6 +1719,16 @@
                     },
                     {
                         "$ref": "#/components/schemas/Error"
+                    }
+                ]
+            },
+            "CheckStatus": {
+                "allOf": [
+                    {
+                        "description": "The result of the check.\n"
+                    },
+                    {
+                        "$ref": "#/components/schemas/VerificationStatus"
                     }
                 ]
             },
@@ -1810,64 +1835,155 @@
                     "status": {
                         "$ref": "#/components/schemas/ServiceVerificationStatus"
                     },
+                    "extracted": {
+                        "$ref": "#/components/schemas/ExtractedData"
+                    },
                     "documentDataChecking": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/DocumentDataChecking"
-                        }
+                        "$ref": "#/components/schemas/DocumentDataChecking"
                     },
                     "documentPhotoQuality": {
-                        "$ref": "#/components/schemas/CheckList"
+                        "$ref": "#/components/schemas/DocumentPhotoQualityResult"
+                    },
+                    "originalDocumentPresence": {
+                        "$ref": "#/components/schemas/OriginalDocumentPresenceResult"
+                    },
+                    "documentQuality": {
+                        "$ref": "#/components/schemas/DocumentQualityResult"
+                    },
+                    "fraudAssessment": {
+                        "$ref": "#/components/schemas/FraudAssessmentResult"
                     },
                     "dataExtractionConsistency": {
-                        "$ref": "#/components/schemas/CheckList"
+                        "$ref": "#/components/schemas/DataExtractionConsistencyResult"
                     }
                 },
                 "required": [
                     "processingState"
                 ]
             },
-            "DocumentDataChecking": {
+            "ExtractedData": {
+                "type": "object",
+                "description": "The data extracted from the ID document.\n",
+                "properties": {
+                    "ocr": {
+                        "type": "array",
+                        "description": "The data extracted from the \"visual\" part of the ID document.",
+                        "items": {
+                            "$ref": "#/components/schemas/ExtractedDataField"
+                        }
+                    },
+                    "mrz": {
+                        "type": "array",
+                        "description": "The data extracted from the Machine Readable Zone of the ID document.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ExtractedDataField"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "valid": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "images": {
+                        "type": "array",
+                        "description": "Images of different parts of the ID document.",
+                        "items": {
+                            "properties": {
+                                "kind": {
+                                    "type": "string",
+                                    "example": "portrait"
+                                },
+                                "uri": {
+                                    "$ref": "#/components/schemas/MediaURI"
+                                },
+                                "mediaType": {
+                                    "type": "string",
+                                    "example": "image/jpeg"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "kind",
+                                "uri"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ExtractedDataField": {
                 "type": "object",
                 "properties": {
                     "category": {
-                        "type": "string",
-                        "example": "First name"
+                        "$ref": "#/components/schemas/FieldCategory"
+                    },
+                    "content": {
+                        "$ref": "#/components/schemas/ExtractedDataContent"
+                    },
+                    "contentType": {
+                        "$ref": "#/components/schemas/ContentType"
+                    }
+                },
+                "required": [
+                    "category",
+                    "content"
+                ]
+            },
+            "ExtractedDataContent": {
+                "type": "string",
+                "description": "The value of the field.\n\nThe format of the value depends on its `category`.\n\nDates are in YYYY-MM-DD format.\nThe \"Gender\" field can take only two values: `male`, `female`.\nCountry fields are in ISO 3166-1 [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements) format.\nOther fields are plain strings.\n",
+                "example": "John"
+            },
+            "DocumentDataChecking": {
+                "type": "array",
+                "description": "The result of comparison of values extracted from \"visual\" and MRZ parts of the ID document.\n",
+                "items": {
+                    "$ref": "#/components/schemas/DocumentDataCheckingItem"
+                }
+            },
+            "DocumentDataCheckingItem": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "$ref": "#/components/schemas/FieldCategory"
                     },
                     "mrz": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "The value extracted from the Machine Readable Zone of the ID document.",
+                        "example": "John"
                     },
                     "ocr": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "The value extracted from the \"visual\" part of the ID document.",
+                        "example": "John"
                     },
                     "equal": {
                         "type": "boolean",
                         "nullable": true,
-                        "description": "Null means that the check between fields on the document was not performed"
+                        "description": "Indicates whether the `mrz` and the `ocr` values are equal.\n\nNote: `null` means that no comparison has been performed.\n",
+                        "example": true
                     },
                     "valid": {
                         "type": "boolean",
-                        "description": "The document field validation result (false means that value is incorrect)"
+                        "description": "The result of the field value validation.",
+                        "example": true
                     },
                     "status": {
-                        "allOf": [
-                            {
-                                "description": "The result of the check."
-                            },
-                            {
-                                "$ref": "#/components/schemas/BreakdownStatus"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/CheckStatus"
                     },
                     "message": {
-                        "type": "string"
-                    },
-                    "documentId": {
                         "type": "string",
-                        "description": "The document ID from which extracted data is compared"
+                        "example": "Value is ok"
                     },
                     "conflicts": {
-                        "description": "A list of conflicts",
+                        "description": "The list of conflicts found.",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -1879,6 +1995,279 @@
                     "equal"
                 ],
                 "additionalProperties": false
+            },
+            "DocumentPhotoQualityResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the quality of the provided photo of the ID document.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "documentPhotoQuality"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Document photo quality"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/DocumentPhotoQualityConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "DocumentPhotoQualityConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "noDocumentInImage",
+                    "supportedDocument",
+                    "darkPhoto",
+                    "glareOnPhoto",
+                    "blurredPhoto",
+                    "colourPicture",
+                    "otherPhotoIssue"
+                ],
+                "example": "noDocumentInImage"
+            },
+            "OriginalDocumentPresenceResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the presence of the original ID document in the provided photo.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "originalDocumentPresence"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Original document presence"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/OriginalDocumentPresenceConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "OriginalDocumentPresenceConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "photoOfScreen",
+                    "screenshot",
+                    "documentOnPrintedPaper",
+                    "scan"
+                ],
+                "example": "photoOfScreen"
+            },
+            "DocumentQualityResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the quality and the integrity of the provided ID document.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "documentQuality"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Document quality"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/DocumentQualityConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "DocumentQualityConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "twoDocumentsUploaded",
+                    "incorrectSide",
+                    "missingBack",
+                    "cutOffDocument",
+                    "coveredphoto",
+                    "cornerRemoved",
+                    "puncturedDocument",
+                    "damagedDocument",
+                    "obscuredDataPoints",
+                    "obscuredSecurityFeatures",
+                    "abnormalDocumentFeatures",
+                    "watermarksDigitalTextOverlay",
+                    "digitalDocument"
+                ],
+                "example": "cornerRemoved"
+            },
+            "FraudAssessmentResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the visual authenticity of the ID document.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "fraudAssessment"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Fraud assessment"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/FraudAssessmentConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "FraudAssessmentConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "template",
+                    "faceDetection",
+                    "pictureFaceIntegrity",
+                    "digitalTampering",
+                    "fonts",
+                    "securityFeatures"
+                ],
+                "example": "digitalTampering"
+            },
+            "DataExtractionConsistencyResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the consistency and validity of the data extracted from the ID document.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "dataExtractionConsistency"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Consistency and validity of extracted data"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/DataExtractionConsistencyConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "DataExtractionConsistencyConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "ageVerification",
+                    "First name",
+                    "Last name",
+                    "Date of birth",
+                    "Date of expiry",
+                    "Document number",
+                    "Personal number",
+                    "MRZ full"
+                ],
+                "example": "First name"
             },
             "ProfileCheckServiceResult": {
                 "type": "object",
@@ -1911,27 +2300,138 @@
                         "$ref": "#/components/schemas/ServiceVerificationStatus"
                     },
                     "formCompare": {
-                        "$ref": "#/components/schemas/CheckList"
+                        "$ref": "#/components/schemas/FormCompareResult"
                     },
                     "matchLocation": {
-                        "$ref": "#/components/schemas/CheckList"
+                        "$ref": "#/components/schemas/MatchLocationResult"
                     },
                     "fieldChecking": {
-                        "type": "array",
-                        "description": "The result of comparing the profile data and the data extracted from the document.",
-                        "items": {
-                            "$ref": "#/components/schemas/FieldChecking"
-                        }
+                        "$ref": "#/components/schemas/FieldChecking"
                     }
                 }
             },
+            "FormCompareResult": {
+                "type": "object",
+                "description": "The result of comparison of the applicant's profile data and the data extracted from the document.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "formCompare"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Comparison of the applicant's profile data with the data extracted from the document"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/FormCompareConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "FormCompareConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "First name",
+                    "Last name",
+                    "Date of birth",
+                    "Issue country",
+                    "Document type",
+                    "Date of issue",
+                    "Date of expiry",
+                    "Nationality",
+                    "Nationality code",
+                    "Gender",
+                    "Document number",
+                    "Personal number",
+                    "Place of birth",
+                    "Place of issue"
+                ],
+                "example": "First name"
+            },
+            "MatchLocationResult": {
+                "type": "object",
+                "description": "The result of comparison of the applicant's current location with the profile data.\n\nThis check can only be performed using the GetID SDK.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "matchLocation"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Comparison of the applicant's location with the profile data"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/MatchLocationConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "MatchLocationConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "Country of residence",
+                    "City of residence"
+                ],
+                "example": "Country of residence"
+            },
             "FieldChecking": {
+                "type": "array",
+                "description": "The result of comparing the profile data and the data extracted from the ID document.",
+                "items": {
+                    "$ref": "#/components/schemas/FieldCheckingItem"
+                }
+            },
+            "FieldCheckingItem": {
                 "type": "object",
                 "properties": {
                     "category": {
-                        "type": "string",
-                        "description": "The name of the field.",
-                        "example": "First name"
+                        "$ref": "#/components/schemas/FieldCategory"
                     },
                     "field": {
                         "type": "string",
@@ -1941,7 +2441,7 @@
                     "extracted": {
                         "type": "string",
                         "description": "The value extracted from the ID document.",
-                        "example": "Joanna"
+                        "example": "John"
                     },
                     "equal": {
                         "type": "boolean",
@@ -1949,14 +2449,7 @@
                         "example": true
                     },
                     "status": {
-                        "allOf": [
-                            {
-                                "description": "The result of the check."
-                            },
-                            {
-                                "$ref": "#/components/schemas/BreakdownStatus"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/CheckStatus"
                     }
                 },
                 "required": [
@@ -2026,12 +2519,14 @@
             "FaceMatchingResult": {
                 "type": "array",
                 "description": "The result of the biometric comparison of the faces in the images provided.",
+                "minItems": 1,
+                "maxItems": 1,
                 "items": {
                     "properties": {
                         "files": {
                             "description": "The list of IDs of files participated in the comparison.",
                             "type": "array",
-                            "minItems": 0,
+                            "minItems": 2,
                             "maxItems": 3,
                             "uniqueItems": true,
                             "items": {
@@ -2043,7 +2538,7 @@
                             ]
                         },
                         "selfieQuality": {
-                            "$ref": "#/components/schemas/CheckList"
+                            "$ref": "#/components/schemas/SelfieQualityResult"
                         },
                         "score": {
                             "description": "A number indicating the level of similarity of faces.",
@@ -2057,6 +2552,56 @@
                     ],
                     "additionalProperties": false
                 }
+            },
+            "SelfieQualityResult": {
+                "type": "object",
+                "description": "The results of all the considerations related to the provided selfie and/or the image captured during the liveness check.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "selfieQuality"
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/SelfieQualityConsiderationName"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "SelfieQualityConsiderationName": {
+                "type": "string",
+                "enum": [
+                    "multipleFacesFound",
+                    "photoNotProvided",
+                    "matchLiveness",
+                    "isSelfie"
+                ],
+                "example": "multipleFacesFound"
             },
             "LivenessCheckServiceResult": {
                 "type": "object",
@@ -2110,7 +2655,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "example": "Identity check in live mode."
+                        "example": "Identity check in live mode"
                     },
                     "considers": {
                         "type": "array",
@@ -2143,10 +2688,24 @@
                 "type": "object",
                 "properties": {
                     "type": {
-                        "$ref": "#/components/schemas/ConsiderationType"
+                        "allOf": [
+                            {
+                                "description": "The result of the \"consideration\"."
+                            },
+                            {
+                                "$ref": "#/components/schemas/ConsiderationResult"
+                            }
+                        ]
                     },
                     "status": {
-                        "$ref": "#/components/schemas/ConsiderationStatus"
+                        "allOf": [
+                            {
+                                "description": "The result of the check.\n\nDepends on the result of the \"consideration\" and the current settings of the verification rules.\n\nIf the result of the \"consideration\" is `clear` then the `stutus` is `approved`. Otherwise, the `status` is `needs-review`, `declined` or `disabled`.\n"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BreakdownStatus"
+                            }
+                        ]
                     },
                     "description": {
                         "type": "string",
@@ -2162,10 +2721,10 @@
             "LivenessConsiderationName": {
                 "type": "string",
                 "enum": [
-                    "Liveness check passed",
-                    "Liveness service signature match"
+                    "livenessCheckPassed",
+                    "livenessServiceSignatureMatch"
                 ],
-                "example": "Liveness check passed"
+                "example": "livenessCheckPassed"
             },
             "ServiceResultVerifier": {
                 "type": "string",
@@ -2175,23 +2734,29 @@
                 "type": "string",
                 "description": "A brief description of the result of the check."
             },
-            "ConsiderationType": {
-                "type": "string",
-                "enum": [
-                    "clear",
-                    "consider"
-                ],
-                "example": "clear"
+            "ConsiderationResult": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/Clear"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Consider"
+                    }
+                ]
             },
-            "ConsiderationStatus": {
+            "Clear": {
                 "type": "string",
+                "description": "No problems are found.",
                 "enum": [
-                    "approved",
-                    "needs-review",
-                    "declined",
-                    "error"
-                ],
-                "example": "approved"
+                    "clear"
+                ]
+            },
+            "Consider": {
+                "type": "string",
+                "description": "A problem detected.",
+                "enum": [
+                    "consider"
+                ]
             },
             "WatchlistsServiceResult": {
                 "type": "object",
@@ -2236,7 +2801,7 @@
                         ]
                     },
                     "summary": {
-                        "$ref": "#/components/schemas/CheckList"
+                        "$ref": "#/components/schemas/WatchlistsSummary"
                     },
                     "records": {
                         "type": "array",
@@ -2250,6 +2815,56 @@
                     "processingState"
                 ],
                 "additionalProperties": false
+            },
+            "WatchlistsSummary": {
+                "type": "object",
+                "description": "The results of all the considerations related to the global AML watchlists' screening.\n",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "enum": [
+                            "watchlists"
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "considers": {
+                        "type": "array",
+                        "description": "The list of the considerations and their results.",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "$ref": "#/components/schemas/WatchlistsConsideration"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Consideration"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "group",
+                    "considers"
+                ],
+                "additionalProperties": false
+            },
+            "WatchlistsConsideration": {
+                "type": "string",
+                "enum": [
+                    "peps",
+                    "sanctions",
+                    "aMedia",
+                    "other"
+                ],
+                "example": "peps"
             },
             "WatchlistsRecord": {
                 "type": "object"
@@ -2288,45 +2903,58 @@
                     }
                 }
             },
-            "CheckList": {
-                "type": "object",
-                "properties": {
-                    "group": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "considers": {
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "name": {
-                                    "type": "string"
+            "Logs": {
+                "type": "array",
+                "description": "A list of events occurred with the application.\n",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "description": "The type of the event.",
+                            "enum": [
+                                "application_created",
+                                "application_processed",
+                                "verifications_completed",
+                                "application_viewed",
+                                "application_removed",
+                                "application_deletion_scheduled",
+                                "application_deletion_canceled",
+                                "comment_changed",
+                                "problem_reported",
+                                "pdf_downloaded",
+                                "status_changed"
+                            ],
+                            "example": "application_created"
+                        },
+                        "user": {
+                            "type": "string",
+                            "description": "The login of the user initiated the event.\nOr, if there is no such person, but event was triggered by the GetID system itself then the value is \"System\".\n",
+                            "example": "System"
+                        },
+                        "comment": {
+                            "type": "string",
+                            "description": "A brief description of the event.",
+                            "example": "The application has been created."
+                        },
+                        "time": {
+                            "allOf": [
+                                {
+                                    "description": "The time when the event occured."
                                 },
-                                "description": {
-                                    "type": "string"
-                                },
-                                "type": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "string"
+                                {
+                                    "$ref": "#/components/schemas/Timestamp"
                                 }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "name",
-                                "description"
                             ]
                         }
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "group",
-                    "considers"
-                ]
+                    },
+                    "required": [
+                        "action",
+                        "user",
+                        "time"
+                    ],
+                    "additionalProperties": false
+                }
             },
             "ApplicationValidationError": {
                 "type": "object",
