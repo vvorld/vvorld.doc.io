@@ -100,7 +100,7 @@ To get the result by callback you must specify callback URL in Admin Panel (Sett
 
 Also you are able to request result using API method `/api/v1/application/{{appId}}`.
 
-The result is in [Enveloped Application format](enveloped-application.yaml).
+The result is in [Application format](getid-api-v1.yml).
 
 **Example:**
 
@@ -334,7 +334,7 @@ The result is in [Enveloped Application format](enveloped-application.yaml).
 
 ### Reading results
 
-The complete description of application format is [Enveloped Application](enveloped-application.yaml).
+The complete description of application format is [Application](getid-api-v1.yml).
 
 ## Admin Panel
 
