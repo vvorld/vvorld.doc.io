@@ -1794,10 +1794,17 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/ConsiderationType"
+          allOf:
+            - description: The result of the "consideration".
+            - $ref: "#/components/schemas/ConsiderationResult"
         status:
           allOf:
-            - description: The result of the check.
+            - description: |
+                The result of the check.
+
+                Depends on the result of the "consideration" and the current settings of the verification rules.
+
+                If the result of the "consideration" is `clear` then the `stutus` is `approved`. Otherwise, the `status` is `needs-review`, `declined` or `disabled`.
             - $ref: "#/components/schemas/BreakdownStatus"
         description:
           type: string
@@ -1818,10 +1825,20 @@ components:
       type: string
       description: A brief description of the result of the check.
 
-    ConsiderationType:
+    ConsiderationResult:
+      oneOf:
+        - $ref: "#/components/schemas/Clear"
+        - $ref: "#/components/schemas/Consider"
+
+    Clear:
       type: string
-      enum: [clear, consider]
-      example: clear
+      description: No problems are found.
+      enum: [clear]
+
+    Consider:
+      type: string
+      description: A problem detected.
+      enum: [consider]
 
     WatchlistsServiceResult:
       type: object
