@@ -34,6 +34,18 @@ tags:
       Also, if the application was created using our SDK, it may contain artefacts confirm that the applicant passes the liveness check.
   - name: "Translation"
     x-displayName: "Translations"
+    description: |
+      GetID SDK gets the user's preferred locale or uses the locale passed to its initializer as the default one.
+      Then the SDK loads translations for the selected locale from the server.
+      It works automatically and doesn't require any additional configuration.
+
+      But one can change some translations if needed.
+      In order to do that, one have to upload a "translation dictionary" for one or several locales.
+      If the "translation dictionary" name is passed to the SDK initializer, the translations from this dictionary will be used.
+      Translations for keys that the dictionary does not contain will be taken from the default GetID dictionary.
+
+      The actual list of supported locales can be obtained using `GET /sdk/v2/locales` method.
+      And the actual list of translation keys can be obtained using `GET /sdk/v2/translations` method.
   - name: "Token"
     x-displayName: "Tokens"
     description: |
@@ -443,85 +455,99 @@ components:
   parameters:
     startDate:
       name: startDate
+      description: The start of the period for which applications are to be queried, in milliseconds.
       in: query
       schema:
         type: integer
+        format: int64
+      example: 1636927200000
     endDate:
       name: endDate
+      description: The end of the period for which applications are to be queried, in milliseconds.
       in: query
       schema:
         type: integer
+        format: int64
+      example: 1637704740000
     statusFilter:
       name: statusFilter
       in: query
       schema:
         type: array
+        description: The filter by statuses applications are in.
         items:
           type: string
-          enum:
-            - declined
-            - approved
-            - needs-review
-            - error
-            - pending
+          enum: [declined, approved, needs-review, error, pending]
+        example: ["needs-review", "declined"]
     countryFilter:
       name: countryFilter
       in: query
       schema:
         type: array
+        description: The filter by issuing countries of documents used for verification.
         items:
           type: string
-          description: Alpha3 country code
+        example: ["EST", "FIN"]
     docTypeFilter:
       name: docTypeFilter
       in: query
       schema:
         type: array
+        description: The filter by types of documents used for verification.
         items:
           $ref: "#/components/schemas/DocumentType"
+        example: ["passport", "id-card"]
     platformFilter:
       name: platformFilter
       in: query
       schema:
         type: array
+        description: The filter by platforms from which applications were submitted.
         items:
-          type: string
-          enum:
-            - api
-            - web
-            - ios
-            - android
+          $ref: "#/components/schemas/Platform"
+        example: ["ios", "API", "internal"]
     authorFilter:
       name: authorFilter
       in: query
       schema:
         type: array
-        description: array of userNames, available option "No author" - returns applications without author
+        description: The filter by Administrative Portal users who created applications. "No Author" value can be used to retrieve applications without an author.
         items:
           type: string
+        example: ["user@company.com", "No+Author"]
     flowFilter:
       name: flowFilter
       in: query
       schema:
         type: array
-        description: array of verification flows
+        description: The filter by verification flows that were used to submit applications.
         items:
           type: string
+        example: ["getid-doc-selfie", "getid-doc-selfie-liveness"]
     pageLimit:
       name: pageLimit
       in: query
       schema:
         type: integer
+        description: The limit of the number of applications in the response.
+        example: 10
+        default: 10
     offset:
       name: offset
       in: query
       schema:
         type: integer
+        description: The offset from the first application in the list.
+        example: 50
+        default: 0
     idsOnly:
       name: idsOnly
       in: query
       schema:
         type: boolean
+        description: Indicates whether full verification results or only application IDs are queried.
+        example: true
+        default: false
 
   responses:
     OK:
@@ -892,13 +918,7 @@ components:
             - description: The set of arbitrary key-value pairs passed as `labels` when submitting the application.
             - $ref: "#/components/schemas/MetadataLabels"
         platform:
-          type: string
-          description: |
-            The platform from which the application was submitted, if our SDK was used: `ios`, `android` or `web`.
-            Or, if the application was submitted using the `POST api/v1/application` method, then the value is `API`.
-            Also, the value can be `internal` if the application was submitted using an "internal flow" in Administrative Portal.
-          enum: [android, ios, web, API, internal]
-          example: web
+          $ref: "#/components/schemas/Platform"
         sdkVersion:
           type: string
           description: The version of the SDK that was used for submitting the application.
@@ -953,6 +973,15 @@ components:
       allOf:
         - description: The value passed as `externalId` when submitting the application.
         - $ref: "#/components/schemas/ExternalID"
+
+    Platform:
+      type: string
+      description: |
+        The platform from which the application was submitted, if our SDK was used: `ios`, `android` or `web`.
+        Or, if the application was submitted using the `POST api/v1/application` method, then the value is `API`.
+        Also, the value can be `internal` if the application was submitted using an "internal flow" in Administrative Portal.
+      enum: [android, ios, web, API, internal]
+      example: web
 
     Timestamp:
       type: string
@@ -1992,7 +2021,15 @@ components:
             - $ref: "#/components/schemas/LocaleIdentifier"
         profile:
           type: object
-          description: The profile data of the applicant.
+          description: |
+            The profile data of the applicant.
+
+            The keys are the names of the profile data fields.
+            You can pass the data you know about the user.
+            It can be fields we check like `First name`, `Last name` or `Date of birth`, and just an arbitrary information.
+
+            The format of the value depends on the type of the field.
+            For more information on the profile data fields, see the description of the application to verify.
           example:
             First name: John
             Last name: Doe
@@ -2009,6 +2046,17 @@ components:
               type: string
               description: A URL to redirect to if the user has not passed the verification flow.
               example: https://google.com
+        ttl:
+          type: integer
+          format: int32
+          description: Time to live of the link, in minutes.
+          example: 600
+        metadata:
+          type: object
+          description: Meta information about the application.
+          properties:
+            labels:
+              $ref: "#/components/schemas/MetadataLabels"
     
     LocaleIdentifier:
       type: string
@@ -2030,7 +2078,9 @@ components:
         dictionary:
           $ref: "#/components/schemas/TranslationDictionaryName"
         locale:
-          $ref: "#/components/schemas/LocaleIdentifier"
+          allOf:
+            - description: A locale identifier.
+            - $ref: "#/components/schemas/LocaleIdentifier"
         items:
           type: object
           description: A set of key-value pairs.

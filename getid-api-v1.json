@@ -17,7 +17,8 @@
         },
         {
             "name": "Translation",
-            "x-displayName": "Translations"
+            "x-displayName": "Translations",
+            "description": "GetID SDK gets the user's preferred locale or uses the locale passed to its initializer as the default one.\nThen the SDK loads translations for the selected locale from the server.\nIt works automatically and doesn't require any additional configuration.\n\nBut one can change some translations if needed.\nIn order to do that, one have to upload a \"translation dictionary\" for one or several locales.\nIf the \"translation dictionary\" name is passed to the SDK initializer, the translations from this dictionary will be used.\nTranslations for keys that the dictionary does not contain will be taken from the default GetID dictionary.\n\nThe actual list of supported locales can be obtained using `GET /sdk/v2/locales` method.\nAnd the actual list of translation keys can be obtained using `GET /sdk/v2/translations` method.\n"
         },
         {
             "name": "Token",
@@ -689,23 +690,30 @@
         "parameters": {
             "startDate": {
                 "name": "startDate",
+                "description": "The start of the period for which applications are to be queried, in milliseconds.",
                 "in": "query",
                 "schema": {
-                    "type": "integer"
-                }
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "example": 1636927200000
             },
             "endDate": {
                 "name": "endDate",
+                "description": "The end of the period for which applications are to be queried, in milliseconds.",
                 "in": "query",
                 "schema": {
-                    "type": "integer"
-                }
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "example": 1637704740000
             },
             "statusFilter": {
                 "name": "statusFilter",
                 "in": "query",
                 "schema": {
                     "type": "array",
+                    "description": "The filter by statuses applications are in.",
                     "items": {
                         "type": "string",
                         "enum": [
@@ -715,7 +723,11 @@
                             "error",
                             "pending"
                         ]
-                    }
+                    },
+                    "example": [
+                        "needs-review",
+                        "declined"
+                    ]
                 }
             },
             "countryFilter": {
@@ -723,10 +735,14 @@
                 "in": "query",
                 "schema": {
                     "type": "array",
+                    "description": "The filter by issuing countries of documents used for verification.",
                     "items": {
-                        "type": "string",
-                        "description": "Alpha3 country code"
-                    }
+                        "type": "string"
+                    },
+                    "example": [
+                        "EST",
+                        "FIN"
+                    ]
                 }
             },
             "docTypeFilter": {
@@ -734,9 +750,14 @@
                 "in": "query",
                 "schema": {
                     "type": "array",
+                    "description": "The filter by types of documents used for verification.",
                     "items": {
                         "$ref": "#/components/schemas/DocumentType"
-                    }
+                    },
+                    "example": [
+                        "passport",
+                        "id-card"
+                    ]
                 }
             },
             "platformFilter": {
@@ -744,15 +765,15 @@
                 "in": "query",
                 "schema": {
                     "type": "array",
+                    "description": "The filter by platforms from which applications were submitted.",
                     "items": {
-                        "type": "string",
-                        "enum": [
-                            "api",
-                            "web",
-                            "ios",
-                            "android"
-                        ]
-                    }
+                        "$ref": "#/components/schemas/Platform"
+                    },
+                    "example": [
+                        "ios",
+                        "API",
+                        "internal"
+                    ]
                 }
             },
             "authorFilter": {
@@ -760,10 +781,14 @@
                 "in": "query",
                 "schema": {
                     "type": "array",
-                    "description": "array of userNames, available option \"No author\" - returns applications without author",
+                    "description": "The filter by Administrative Portal users who created applications. \"No Author\" value can be used to retrieve applications without an author.",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "user@company.com",
+                        "No+Author"
+                    ]
                 }
             },
             "flowFilter": {
@@ -771,31 +796,44 @@
                 "in": "query",
                 "schema": {
                     "type": "array",
-                    "description": "array of verification flows",
+                    "description": "The filter by verification flows that were used to submit applications.",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "getid-doc-selfie",
+                        "getid-doc-selfie-liveness"
+                    ]
                 }
             },
             "pageLimit": {
                 "name": "pageLimit",
                 "in": "query",
                 "schema": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "The limit of the number of applications in the response.",
+                    "example": 10,
+                    "default": 10
                 }
             },
             "offset": {
                 "name": "offset",
                 "in": "query",
                 "schema": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "The offset from the first application in the list.",
+                    "example": 50,
+                    "default": 0
                 }
             },
             "idsOnly": {
                 "name": "idsOnly",
                 "in": "query",
                 "schema": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Indicates whether full verification results or only application IDs are queried.",
+                    "example": true,
+                    "default": false
                 }
             }
         },
@@ -1287,16 +1325,7 @@
                         ]
                     },
                     "platform": {
-                        "type": "string",
-                        "description": "The platform from which the application was submitted, if our SDK was used: `ios`, `android` or `web`.\nOr, if the application was submitted using the `POST api/v1/application` method, then the value is `API`.\nAlso, the value can be `internal` if the application was submitted using an \"internal flow\" in Administrative Portal.\n",
-                        "enum": [
-                            "android",
-                            "ios",
-                            "web",
-                            "API",
-                            "internal"
-                        ],
-                        "example": "web"
+                        "$ref": "#/components/schemas/Platform"
                     },
                     "sdkVersion": {
                         "type": "string",
@@ -1369,6 +1398,18 @@
                         "$ref": "#/components/schemas/ExternalID"
                     }
                 ]
+            },
+            "Platform": {
+                "type": "string",
+                "description": "The platform from which the application was submitted, if our SDK was used: `ios`, `android` or `web`.\nOr, if the application was submitted using the `POST api/v1/application` method, then the value is `API`.\nAlso, the value can be `internal` if the application was submitted using an \"internal flow\" in Administrative Portal.\n",
+                "enum": [
+                    "android",
+                    "ios",
+                    "web",
+                    "API",
+                    "internal"
+                ],
+                "example": "web"
             },
             "Timestamp": {
                 "type": "string",
@@ -3003,7 +3044,7 @@
                     },
                     "profile": {
                         "type": "object",
-                        "description": "The profile data of the applicant.",
+                        "description": "The profile data of the applicant.\n\nThe keys are the names of the profile data fields.\nYou can pass the data you know about the user.\nIt can be fields we check like `First name`, `Last name` or `Date of birth`, and just an arbitrary information.\n\nThe format of the value depends on the type of the field.\nFor more information on the profile data fields, see the description of the application to verify.\n",
                         "example": {
                             "First name": "John",
                             "Last name": "Doe",
@@ -3023,6 +3064,21 @@
                                 "type": "string",
                                 "description": "A URL to redirect to if the user has not passed the verification flow.",
                                 "example": "https://google.com"
+                            }
+                        }
+                    },
+                    "ttl": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Time to live of the link, in minutes.",
+                        "example": 600
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Meta information about the application.",
+                        "properties": {
+                            "labels": {
+                                "$ref": "#/components/schemas/MetadataLabels"
                             }
                         }
                     }
@@ -3054,7 +3110,14 @@
                         "$ref": "#/components/schemas/TranslationDictionaryName"
                     },
                     "locale": {
-                        "$ref": "#/components/schemas/LocaleIdentifier"
+                        "allOf": [
+                            {
+                                "description": "A locale identifier."
+                            },
+                            {
+                                "$ref": "#/components/schemas/LocaleIdentifier"
+                            }
+                        ]
                     },
                     "items": {
                         "type": "object",
