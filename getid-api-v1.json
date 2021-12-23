@@ -7,7 +7,7 @@
             "url": "./logo.svg",
             "altText": "GetID"
         },
-        "description": "# Overview\n\nThe GetID API allows you to send applications for verification and receive the results.\nVerification results for applications created using our SDKs can also be obtained through the API.\n\nA verification consists of one or more \"checks\".\nDifferent checks require different sets of an applicant's data.\n\n# Authentication\n\nThe GetID API uses token-based authentication. \nAPI tokens must be included in the header of all requests made to the API.\n\n<SecurityDefinitions />\n"
+        "description": "# Overview\n\nThe GetID API allows you to send applications for verification and receive the results.\nVerification results for applications created using our SDKs can also be obtained through the API.\n\nA verification consists of one or more \"checks\".\nDifferent checks require different sets of an applicant's data.\n\n# Request, response format\n\nYou should use a `Content-Type: application/json` header with all requests.\nResponses return JSON with a consistent structure.\n\n# Authentication\n\nThe GetID API uses token-based authentication. \nAPI tokens must be included in the header of all requests made to the API.\n\n<SecurityDefinitions />\n"
     },
     "tags": [
         {
@@ -289,6 +289,100 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/OK"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/api/v1/application/{id}/set-comment": {
+            "post": {
+                "summary": "Set a comment to an application",
+                "security": [
+                    {
+                        "APIKeyAuth": []
+                    },
+                    {
+                        "APITokenAuth": []
+                    }
+                ],
+                "description": "Sets a comment to a previously submitted application.\n",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/ApplicationID"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentToSet"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/OK"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "tags": [
+                    "Application"
+                ]
+            }
+        },
+        "/api/v1/application/{id}/set-status": {
+            "post": {
+                "summary": "Set the status of an application",
+                "security": [
+                    {
+                        "APIKeyAuth": []
+                    },
+                    {
+                        "APITokenAuth": []
+                    }
+                ],
+                "description": "Sets the status of a previously submitted application.\n",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/ApplicationID"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StatusToSet"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "$ref": "#/components/responses/OK"
@@ -952,6 +1046,7 @@
             "ExternalID": {
                 "type": "string",
                 "description": "A unique identifier.\nYou can use it to link an application with a user in your system.\n",
+                "maxLength": 256,
                 "example": "dse31-sla05-wte93"
             },
             "MetadataLabels": {
@@ -2927,9 +3022,7 @@
                 "description": "A user's comment.",
                 "properties": {
                     "text": {
-                        "type": "string",
-                        "description": "The text of the comment.",
-                        "example": "Everything's OK"
+                        "$ref": "#/components/schemas/CommentText"
                     },
                     "author": {
                         "type": "string",
@@ -2943,6 +3036,11 @@
                         "example": "2020-03-17T20:28:37.061Z"
                     }
                 }
+            },
+            "CommentText": {
+                "type": "string",
+                "description": "The text of the comment.",
+                "example": "Everything's OK"
             },
             "Logs": {
                 "type": "array",
@@ -3029,13 +3127,41 @@
                 },
                 "additionalProperties": false
             },
+            "CommentToSet": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "$ref": "#/components/schemas/CommentText"
+                    }
+                },
+                "required": [
+                    "text"
+                ]
+            },
+            "StatusToSet": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "The new status of the application.",
+                        "enum": [
+                            "approved",
+                            "needs-review",
+                            "declined"
+                        ]
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
             "SDKConfiguration": {
                 "type": "object",
                 "properties": {
                     "locale": {
                         "allOf": [
                             {
-                                "description": "A locale identifier. The SDK uses the specified locale as the default one."
+                                "description": "A locale identifier. The SDK uses the specified locale as the default one.\n\nThe actual list of supported locales can be obtained using `GET /sdk/v2/locales` method.\n"
                             },
                             {
                                 "$ref": "#/components/schemas/LocaleIdentifier"

@@ -16,6 +16,11 @@ info:
     A verification consists of one or more "checks".
     Different checks require different sets of an applicant's data.
 
+    # Request, response format
+
+    You should use a `Content-Type: application/json` header with all requests.
+    Responses return JSON with a consistent structure.
+
     # Authentication
 
     The GetID API uses token-based authentication. 
@@ -205,6 +210,62 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/ApplicationID"
+      responses:
+        "200":
+          $ref: "#/components/responses/OK"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      tags: ["Application"]
+
+  /api/v1/application/{id}/set-comment:
+    post:
+      summary: "Set a comment to an application"
+      security:
+        - APIKeyAuth: []
+        - APITokenAuth: []
+      description: |
+        Sets a comment to a previously submitted application.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/ApplicationID"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/CommentToSet"
+      responses:
+        "200":
+          $ref: "#/components/responses/OK"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      tags: ["Application"]
+
+  /api/v1/application/{id}/set-status:
+    post:
+      summary: "Set the status of an application"
+      security:
+        - APIKeyAuth: []
+        - APITokenAuth: []
+      description: |
+        Sets the status of a previously submitted application.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/ApplicationID"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/StatusToSet"
       responses:
         "200":
           $ref: "#/components/responses/OK"
@@ -623,6 +684,7 @@ components:
       description: |
         A unique identifier.
         You can use it to link an application with a user in your system.
+      maxLength: 256
       example: dse31-sla05-wte93
 
     MetadataLabels:
@@ -1944,9 +2006,7 @@ components:
       description: A user's comment.
       properties:
         text:
-          type: string
-          description: The text of the comment.
-          example: "Everything's OK"
+          $ref: "#/components/schemas/CommentText"
         author:
           type: string
           description: The login of the comment's author.
@@ -1957,6 +2017,11 @@ components:
           format: date-time
           example: "2020-03-17T20:28:37.061Z"
   
+    CommentText:
+      type: string
+      description: The text of the comment.
+      example: "Everything's OK"
+
     Logs:
       type: array
       description: |
@@ -2012,12 +2077,31 @@ components:
           example: It should match the pattern "^[A-Z]{3}$".
       additionalProperties: false
     
+    CommentToSet:
+      type: object
+      properties:
+        text:
+          $ref: "#/components/schemas/CommentText"
+      required: [text]
+
+    StatusToSet:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The new status of the application.
+          enum: [approved, needs-review, declined]
+      required: [status]
+
     SDKConfiguration:
       type: object
       properties:
         locale:
           allOf:
-            - description: A locale identifier. The SDK uses the specified locale as the default one.
+            - description: |
+                A locale identifier. The SDK uses the specified locale as the default one.
+
+                The actual list of supported locales can be obtained using `GET /sdk/v2/locales` method.
             - $ref: "#/components/schemas/LocaleIdentifier"
         profile:
           type: object
