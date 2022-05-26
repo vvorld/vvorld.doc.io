@@ -1187,8 +1187,6 @@ components:
       type: object
       description: |
         The summary of the result of the verification.
-
-        Omitted while the `processingState` is `processing`.
       properties:
         status:
           $ref: "#/components/schemas/ApplicationVerificationStatus"

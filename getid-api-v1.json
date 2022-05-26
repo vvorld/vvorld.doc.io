@@ -1706,7 +1706,7 @@
             },
             "OverallResult": {
                 "type": "object",
-                "description": "The summary of the result of the verification.\n\nOmitted while the `processingState` is `processing`.\n",
+                "description": "The summary of the result of the verification.\n",
                 "properties": {
                     "status": {
                         "$ref": "#/components/schemas/ApplicationVerificationStatus"
